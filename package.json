@@ -4,7 +4,6 @@
   "type": "module",
   "dependencies": {
     "@netlify/blobs": "^9.0.4",
-    "@netlify/functions": "^4.2.4",
-    "@netlify/identity": "^2.0.1"
+    "@netlify/functions": "^4.2.4"
   }
 }
