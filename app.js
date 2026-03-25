@@ -4,6 +4,7 @@ const state = {
   data: { events: [], members: [], messages: [], documents: [] },
   currentView: 'dashboard',
 };
+window.netlifyIdentity.init({ locale: 'en' });
 
 const authShell = document.getElementById('auth-shell');
 const appShell = document.getElementById('app-shell');
@@ -559,5 +560,13 @@ if (window.netlifyIdentity) {
     showLoggedOut();
   }
 });
-  window.netlifyIdentity.init();
+window.netlifyIdentity.on('init', (user) => {
+  if (user) {
+    showAuthenticated(user);
+    loadData();
+    activateView('dashboard');
+  } else {
+    showLoggedOut();
+  }
+});
 }
