@@ -550,5 +550,14 @@ if (window.netlifyIdentity) {
   });
   window.netlifyIdentity.on('logout', () => showLoggedOut());
   window.netlifyIdentity.on('error', (error) => showToast(error.message || 'Identity-fejl'));
+  window.netlifyIdentity.on('init', (user) => {
+  if (user) {
+    showAuthenticated(user);
+    loadData();
+    activateView('dashboard');
+  } else {
+    showLoggedOut();
+  }
+});
   window.netlifyIdentity.init();
 }
