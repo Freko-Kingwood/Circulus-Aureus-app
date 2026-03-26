@@ -5,6 +5,7 @@ const identityStatus=document.getElementById('identity-status');
 const pageTitle=document.getElementById('page-title');
 const rolePill=document.getElementById('role-pill');
 const adminTab=document.getElementById('admin-tab');
+const adminMobileTab = document.getElementById('admin-mobile-tab');
 const toast=document.getElementById('toast');
 const miniName=document.getElementById('mini-name');
 const miniEmail=document.getElementById('mini-email');
