@@ -1,7 +1,7 @@
 const state = {
   currentUser: null,
   isAdmin: false,
-  data: { events: [], members: [], messages: [], documents: [] },
+  data: { events: [], members: [], messages: [], documents: [], approvals: [] },
   currentView: 'dashboard'
 };
 
@@ -108,6 +108,7 @@ function renderAll() {
           <button class="btn btn-primary" data-rsvp="${event.id}" data-answer="Ja" type="button">Ja</button>
           <button class="btn btn-secondary" data-rsvp="${event.id}" data-answer="Måske" type="button">Måske</button>
           <button class="btn btn-secondary" data-rsvp="${event.id}" data-answer="Nej" type="button">Nej</button>
+          ${state.isAdmin ? `<button class="btn btn-secondary" data-delete-type="event" data-delete-id="${event.id}" type="button">Slet</button>` : ''}
         </div>
       `;
       eventsList.appendChild(el);
@@ -126,7 +127,10 @@ function renderAll() {
         <p class="eyebrow">${doc.createdAt || ''}</p>
         <h3>${doc.title}</h3>
         <p>${doc.note || ''}</p>
-        <button class="btn btn-secondary" data-download="${doc.id}" type="button">Download</button>
+        <div class="event-actions">
+          <button class="btn btn-secondary" data-download="${doc.id}" type="button">Download</button>
+          ${state.isAdmin ? `<button class="btn btn-secondary" data-delete-type="document" data-delete-id="${doc.id}" type="button">Slet</button>` : ''}
+        </div>
       `;
       docsList.appendChild(el);
     });
@@ -145,6 +149,7 @@ function renderAll() {
         <h3>${member.name}</h3>
         <p>${member.email || ''}</p>
         <p>${member.since ? 'Medlem siden ' + member.since : ''}</p>
+        ${state.isAdmin ? `<button class="btn btn-secondary" data-delete-type="member" data-delete-id="${member.id}" type="button">Slet</button>` : ''}
       `;
       membersList.appendChild(el);
     });
@@ -162,9 +167,33 @@ function renderAll() {
         <p class="eyebrow">${message.createdAt || ''}</p>
         <h3>${message.title}</h3>
         <p>${message.body || ''}</p>
+        ${state.isAdmin ? `<button class="btn btn-secondary" data-delete-type="message" data-delete-id="${message.id}" type="button">Slet</button>` : ''}
       `;
       messagesList.appendChild(el);
     });
+  }
+
+  const approvalsHost = document.getElementById('approval-list');
+  if (approvalsHost) {
+    approvalsHost.innerHTML = '';
+    if (!state.data.approvals?.length) {
+      approvalsHost.innerHTML = '<article class="card glass"><p>Ingen afventende godkendelser.</p></article>';
+    } else {
+      state.data.approvals.forEach((item) => {
+        const el = document.createElement('article');
+        el.className = 'card glass';
+        el.innerHTML = `
+          <p class="eyebrow">Afventer godkendelse</p>
+          <h3>${item.email}</h3>
+          <p>Oprettet: ${item.createdAt || ''}</p>
+          <div class="event-actions">
+            <button class="btn btn-primary" data-approve-email="${item.email}" type="button">Godkend</button>
+            <button class="btn btn-secondary" data-reject-email="${item.email}" type="button">Afvis</button>
+          </div>
+        `;
+        approvalsHost.appendChild(el);
+      });
+    }
   }
 }
 
@@ -234,9 +263,11 @@ document.getElementById('open-login').addEventListener('click', () => {
   window.netlifyIdentity.open('login');
 });
 
-document.getElementById('open-signup').addEventListener('click', () => {
-  setIdentityFrameActive(true);
-  window.netlifyIdentity.open('signup');
+document.getElementById('open-signup').addEventListener('click', async () => {
+  if (window.netlifyIdentity) {
+    setIdentityFrameActive(true);
+    window.netlifyIdentity.open('signup');
+  }
 });
 
 document.getElementById('logout-btn').addEventListener('click', () => {
@@ -343,7 +374,7 @@ document.getElementById('document-form').addEventListener('submit', async (e) =>
   }
 });
 
-document.addEventListener('click', (e) => {
+document.addEventListener('click', async (e) => {
   const rsvpBtn = e.target.closest('[data-rsvp]');
   if (rsvpBtn) {
     showToast(`Du har svaret: ${rsvpBtn.dataset.answer}`);
@@ -352,6 +383,57 @@ document.addEventListener('click', (e) => {
   const downloadBtn = e.target.closest('[data-download]');
   if (downloadBtn) {
     window.open(`/.netlify/functions/download-document?id=${encodeURIComponent(downloadBtn.dataset.download)}`, '_blank');
+  }
+
+  const deleteBtn = e.target.closest('[data-delete-type]');
+  if (deleteBtn) {
+    const type = deleteBtn.dataset.deleteType;
+    const id = deleteBtn.dataset.deleteId;
+    const map = {
+      event: '/.netlify/functions/admin-delete-event',
+      member: '/.netlify/functions/admin-delete-member',
+      message: '/.netlify/functions/admin-delete-message',
+      document: '/.netlify/functions/admin-delete-document'
+    };
+
+    try {
+      await fetchJSON(map[type], {
+        method: 'POST',
+        body: JSON.stringify({ id })
+      });
+      await loadData();
+      showToast('Slettet');
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
+  const approveBtn = e.target.closest('[data-approve-email]');
+  if (approveBtn) {
+    try {
+      await fetchJSON('/.netlify/functions/admin-approve-user', {
+        method: 'POST',
+        body: JSON.stringify({ email: approveBtn.dataset.approveEmail })
+      });
+      await loadData();
+      showToast('Bruger godkendt');
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+
+  const rejectBtn = e.target.closest('[data-reject-email]');
+  if (rejectBtn) {
+    try {
+      await fetchJSON('/.netlify/functions/admin-reject-user', {
+        method: 'POST',
+        body: JSON.stringify({ email: rejectBtn.dataset.rejectEmail })
+      });
+      await loadData();
+      showToast('Bruger afvist');
+    } catch (error) {
+      showToast(error.message);
+    }
   }
 });
 
@@ -364,6 +446,15 @@ if (window.netlifyIdentity) {
 
   window.netlifyIdentity.on('close', () => {
     setIdentityFrameActive(false);
+  });
+
+  window.netlifyIdentity.on('signup', async (user) => {
+    try {
+      await fetchJSON('/.netlify/functions/request-access', {
+        method: 'POST',
+        body: JSON.stringify({ email: user?.email || '' })
+      });
+    } catch {}
   });
 
   window.netlifyIdentity.on('login', async (user) => {
