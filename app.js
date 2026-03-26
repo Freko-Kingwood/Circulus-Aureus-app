@@ -1,16 +1,23 @@
-const state = {
-  currentView: "dashboard"
-};
+let user = null;
 
-function showView(view) {
-  document.querySelectorAll(".view").forEach(v => v.style.display = "none");
-  document.getElementById("view-" + view).style.display = "block";
+function login() {
+  user = document.getElementById('username').value;
+  if (!user) return alert("Indtast navn");
+
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
 }
 
-document.querySelectorAll("[data-view]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    showView(btn.dataset.view);
-  });
-});
+async function loadMessages() {
+  const res = await fetch('/.netlify/functions/list-data');
+  const data = await res.json();
 
-showView("dashboard");
+  const list = document.getElementById('messages');
+  list.innerHTML = '';
+
+  (data.messages || []).forEach(m => {
+    const li = document.createElement('li');
+    li.textContent = m.title;
+    list.appendChild(li);
+  });
+}
