@@ -3,9 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <title>Circulus Aureus</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Circulus Aureus</h1>
-  <p>Din app virker 🎉</p>
+  <div id="app">
+    <h1>Circulus Aureus</h1>
+
+    <div id="login">
+      <input id="username" placeholder="Brugernavn">
+      <button onclick="login()">Login</button>
+    </div>
+
+    <div id="content" style="display:none;">
+      <h2>Dashboard</h2>
+      <button onclick="loadMessages()">Indlæs beskeder</button>
+      <ul id="messages"></ul>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
