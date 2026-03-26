@@ -1,23 +1,49 @@
-let user = null;
+const state={currentUser:null,isAdmin:false,data:{events:[],members:[],messages:[],documents:[]},currentView:'dashboard'};
+const authShell=document.getElementById('auth-shell');
+const appShell=document.getElementById('app-shell');
+const identityStatus=document.getElementById('identity-status');
+const pageTitle=document.getElementById('page-title');
+const rolePill=document.getElementById('role-pill');
+const adminTab=document.getElementById('admin-tab');
+const toast=document.getElementById('toast');
+const miniName=document.getElementById('mini-name');
+const miniEmail=document.getElementById('mini-email');
+const miniAvatar=document.getElementById('mini-avatar');
+const profileName=document.getElementById('profile-name');
+const profileEmail=document.getElementById('profile-email');
+const profileRole=document.getElementById('profile-role');
+const viewEls={dashboard:document.getElementById('view-dashboard'),events:document.getElementById('view-events'),documents:document.getElementById('view-documents'),members:document.getElementById('view-members'),messages:document.getElementById('view-messages'),profile:document.getElementById('view-profile'),admin:document.getElementById('view-admin')};
+const navButtons=[...document.querySelectorAll('.nav-item[data-view]')];
+const adminEmails=['frekopetersen1998@gmail.com'];
 
-function login() {
-  user = document.getElementById('username').value;
-  if (!user) return alert("Indtast navn");
-
-  document.getElementById('login').style.display = 'none';
-  document.getElementById('content').style.display = 'block';
-}
-
-async function loadMessages() {
-  const res = await fetch('/.netlify/functions/list-data');
-  const data = await res.json();
-
-  const list = document.getElementById('messages');
-  list.innerHTML = '';
-
-  (data.messages || []).forEach(m => {
-    const li = document.createElement('li');
-    li.textContent = m.title;
-    list.appendChild(li);
-  });
-}
+function showToast(message){toast.textContent=message;toast.classList.remove('hidden');setTimeout(()=>toast.classList.add('hidden'),3200);}
+function setIdentityFrameActive(active){document.querySelectorAll('iframe[title="Netlify identity widget"]').forEach((frame)=>{frame.style.pointerEvents=active?'auto':'none';frame.style.display=active?'block':'none';});}
+function getInitials(text){return (text||'CA').split(/\s|@|\./).filter(Boolean).slice(0,2).map(part=>part[0].toUpperCase()).join('');}
+async function fetchJSON(url, options={}){const headers={...(options.headers||{})};if(!(options.body instanceof FormData)&&!headers['Content-Type'])headers['Content-Type']='application/json';if(state.currentUser?.token?.access_token)headers.Authorization=`Bearer ${state.currentUser.token.access_token}`;const res=await fetch(url,{...options,headers});if(!res.ok){let msg='Ukendt fejl';try{const data=await res.json();msg=data.error||data.message||msg;}catch{}throw new Error(msg);}return res.json();}
+async function loadData(){const payload=await fetchJSON('/.netlify/functions/list-data');state.data=payload;renderAll();}
+function renderAll(){
+document.getElementById('stat-events').textContent=state.data.events.length;
+document.getElementById('stat-docs').textContent=state.data.documents.length;
+document.getElementById('stat-members').textContent=state.data.members.length;
+const eventsList=document.getElementById('events-list');eventsList.innerHTML='';
+if(!state.data.events.length){eventsList.innerHTML='<article class="card glass"><p>Ingen begivenheder endnu.</p></article>';}else{state.data.events.forEach((event)=>{const el=document.createElement('article');el.className='card glass';el.innerHTML=`<p class="eyebrow">${event.datetime||''}</p><h3>${event.title}</h3><p>${event.location||''}</p><p>${event.description||''}</p><div class="event-actions"><button class="btn btn-primary" data-rsvp="${event.id}" data-answer="Ja" type="button">Ja</button><button class="btn btn-secondary" data-rsvp="${event.id}" data-answer="Måske" type="button">Måske</button><button class="btn btn-secondary" data-rsvp="${event.id}" data-answer="Nej" type="button">Nej</button></div>`;eventsList.appendChild(el);});}
+const docsList=document.getElementById('documents-list');docsList.innerHTML='';
+if(!state.data.documents.length){docsList.innerHTML='<article class="card glass"><p>Ingen dokumenter endnu.</p></article>';}else{state.data.documents.forEach((doc)=>{const el=document.createElement('article');el.className='card glass';el.innerHTML=`<p class="eyebrow">${doc.createdAt||''}</p><h3>${doc.title}</h3><p>${doc.note||''}</p><button class="btn btn-secondary" data-download="${doc.id}" type="button">Download</button>`;docsList.appendChild(el);});}
+const membersList=document.getElementById('members-list');membersList.innerHTML='';
+if(!state.data.members.length){membersList.innerHTML='<article class="card glass"><p>Ingen medlemmer endnu.</p></article>';}else{state.data.members.forEach((member)=>{const el=document.createElement('article');el.className='card glass member';el.innerHTML=`<div class="avatar">${getInitials(member.name)}</div><h3>${member.name}</h3><p>${member.email||''}</p><p>${member.since?'Medlem siden '+member.since:''}</p>`;membersList.appendChild(el);});}
+const messagesList=document.getElementById('messages-list');messagesList.innerHTML='';
+if(!state.data.messages.length){messagesList.innerHTML='<article class="card glass"><p>Ingen beskeder endnu.</p></article>';}else{state.data.messages.forEach((message)=>{const el=document.createElement('article');el.className='card glass';el.innerHTML=`<p class="eyebrow">${message.createdAt||''}</p><h3>${message.title}</h3><p>${message.body||''}</p>`;messagesList.appendChild(el);});}}
+function activateView(viewName){state.currentView=viewName;Object.entries(viewEls).forEach(([name,el])=>{if(el)el.classList.toggle('active-view',name===viewName);});navButtons.forEach((btn)=>btn.classList.toggle('active',btn.dataset.view===viewName));const titles={dashboard:'Dashboard',events:'Begivenheder',documents:'Referater',members:'Medlemmer',messages:'Beskeder',profile:'Profil',admin:'Adminpanel'};pageTitle.textContent=titles[viewName]||'Circulus Aureus';}
+function showAuthenticated(user){state.currentUser=user;const email=user?.email||'';state.isAdmin=adminEmails.includes(email.toLowerCase());authShell.classList.add('hidden');appShell.classList.remove('hidden');identityStatus.textContent='Godkendt adgang';miniName.textContent=email.split('@')[0]||'Medlem';miniEmail.textContent=email;miniAvatar.textContent=getInitials(email);profileName.textContent=email.split('@')[0]||'Medlem';profileEmail.textContent=email;rolePill.textContent=state.isAdmin?'Admin':'Medlem';profileRole.textContent=state.isAdmin?'Admin':'Medlem';adminTab.classList.toggle('hidden',!state.isAdmin);}
+function showLoggedOut(){state.currentUser=null;state.isAdmin=false;authShell.classList.remove('hidden');appShell.classList.add('hidden');identityStatus.textContent='Afventer login';rolePill.textContent='Medlem';adminTab.classList.add('hidden');}
+document.getElementById('open-login').addEventListener('click',()=>{setIdentityFrameActive(true);window.netlifyIdentity.open('login');});
+document.getElementById('open-signup').addEventListener('click',()=>{setIdentityFrameActive(true);window.netlifyIdentity.open('signup');});
+document.getElementById('logout-btn').addEventListener('click',()=>window.netlifyIdentity.logout());
+navButtons.forEach((btn)=>btn.addEventListener('click',()=>{const target=btn.dataset.view;if(target==='admin'&&!state.isAdmin)return;activateView(target);}));
+document.querySelectorAll('.nav-jump').forEach((btn)=>btn.addEventListener('click',()=>activateView(btn.dataset.view)));
+document.getElementById('event-form').addEventListener('submit',async(e)=>{e.preventDefault();const form=new FormData(e.target);try{await fetchJSON('/.netlify/functions/admin-save-event',{method:'POST',body:JSON.stringify(Object.fromEntries(form))});e.target.reset();await loadData();showToast('Begivenhed gemt');}catch(error){showToast(error.message);}});
+document.getElementById('member-form').addEventListener('submit',async(e)=>{e.preventDefault();const form=new FormData(e.target);try{await fetchJSON('/.netlify/functions/admin-save-member',{method:'POST',body:JSON.stringify(Object.fromEntries(form))});e.target.reset();await loadData();showToast('Medlem gemt');}catch(error){showToast(error.message);}});
+document.getElementById('message-form').addEventListener('submit',async(e)=>{e.preventDefault();const form=new FormData(e.target);try{await fetchJSON('/.netlify/functions/admin-save-message',{method:'POST',body:JSON.stringify(Object.fromEntries(form))});e.target.reset();await loadData();showToast('Besked gemt');}catch(error){showToast(error.message);}});
+document.getElementById('document-form').addEventListener('submit',async(e)=>{e.preventDefault();const fileInput=e.target.querySelector('input[type="file"]');const file=fileInput.files[0];if(!file){showToast('Vælg en fil først');return;}const title=e.target.querySelector('input[name="title"]').value;const note=e.target.querySelector('input[name="note"]').value;const bytes=new Uint8Array(await file.arrayBuffer());const chars=Array.from(bytes,(b)=>String.fromCharCode(b)).join('');const content=btoa(chars);try{await fetchJSON('/.netlify/functions/upload-document',{method:'POST',body:JSON.stringify({title,note,filename:file.name,mime:file.type,content})});e.target.reset();await loadData();showToast('Dokument uploadet');}catch(error){showToast(error.message);}});
+document.addEventListener('click',(e)=>{const rsvpBtn=e.target.closest('[data-rsvp]');if(rsvpBtn)showToast(`Du har svaret: ${rsvpBtn.dataset.answer}`);const downloadBtn=e.target.closest('[data-download]');if(downloadBtn)window.open(`/.netlify/functions/download-document?id=${encodeURIComponent(downloadBtn.dataset.download)}`,'_blank');});
+if(window.netlifyIdentity){window.netlifyIdentity.init({locale:'en'});window.netlifyIdentity.on('open',()=>setIdentityFrameActive(true));window.netlifyIdentity.on('close',()=>setIdentityFrameActive(false));window.netlifyIdentity.on('login',async(user)=>{setIdentityFrameActive(false);showAuthenticated(user);window.netlifyIdentity.close();try{await loadData();activateView('dashboard');}catch(error){showToast(error.message);}});window.netlifyIdentity.on('logout',()=>{setIdentityFrameActive(false);showLoggedOut();});window.netlifyIdentity.on('init',async(user)=>{setIdentityFrameActive(false);if(user){showAuthenticated(user);try{await loadData();activateView('dashboard');}catch(error){showToast(error.message);}}else{showLoggedOut();}});window.netlifyIdentity.on('error',(error)=>showToast(error?.message||'Identity-fejl'));}else{showToast('Netlify Identity blev ikke indlæst');}
