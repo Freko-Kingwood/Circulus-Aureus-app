@@ -1,19 +1,16 @@
-import { json, readList, writeList, makeId, requireAuth } from './_utils.mjs';
-
-export default async (req) => {
-  try {
-    requireAuth(req);
-    const body = await req.json();
-    const items = await readList('messages', []);
-    items.unshift({
-      id: makeId('message'),
-      title: body.title || 'Uden titel',
-      body: body.body || '',
-      createdAt: new Date().toISOString(),
-    });
-    await writeList('messages', items);
-    return json({ ok: true });
-  } catch (error) {
-    return json({ error: error.message }, 400);
-  }
+const state = {
+  currentView: "dashboard"
 };
+
+function showView(view) {
+  document.querySelectorAll(".view").forEach(v => v.style.display = "none");
+  document.getElementById("view-" + view).style.display = "block";
+}
+
+document.querySelectorAll("[data-view]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    showView(btn.dataset.view);
+  });
+});
+
+showView("dashboard");
