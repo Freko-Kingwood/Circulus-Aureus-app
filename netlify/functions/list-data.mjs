@@ -1,12 +1,10 @@
-import { json, readList } from './_utils.mjs';
+import { json, readList } from "./_utils.mjs";
 
 export default async () => {
-  const [events, members, messages, documents] = await Promise.all([
-    readList('events', []),
-    readList('members', []),
-    readList('messages', []),
-    readList('documents', []),
-  ]);
+  const events = await readList("events", []);
+  const members = await readList("members", []);
+  const messages = await readList("messages", []);
+  const documents = await readList("documents", []);
 
   return json({ events, members, messages, documents });
 };
