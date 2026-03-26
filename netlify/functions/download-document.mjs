@@ -1,22 +1,33 @@
-import { readList, store } from './_utils.mjs';
+import { readList, store } from "./_utils.mjs";
 
 export default async (req) => {
   const url = new URL(req.url);
-  const id = url.searchParams.get('id');
-  const docs = await readList('documents', []);
-  const doc = docs.find((d) => d.id === id);
+  const id = url.searchParams.get("id");
 
-  if (!doc) {
-    return new Response('Not found', { status: 404 });
+  if (!id) {
+    return new Response("Manglende id", { status: 400 });
   }
 
-  const content = await store().get(`file:${id}`, { type: 'text' });
-  const bytes = Uint8Array.from(atob(content || ''), (c) => c.charCodeAt(0));
+  const docs = await readList("documents", []);
+  const doc = docs.find((item) => item.id === id);
+
+  if (!doc) {
+    return new Response("Dokument ikke fundet", { status: 404 });
+  }
+
+  const base64 = await store.get(`file:${id}`, { type: "text" });
+
+  if (!base64) {
+    return new Response("Fil ikke fundet", { status: 404 });
+  }
+
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 
   return new Response(bytes, {
+    status: 200,
     headers: {
-      'content-type': doc.mime || 'application/octet-stream',
-      'content-disposition': `attachment; filename="${doc.filename || 'download'}"`,
-    },
+      "content-type": doc.mime || "application/octet-stream",
+      "content-disposition": `attachment; filename="${doc.filename || "download.bin"}"`
+    }
   });
 };
