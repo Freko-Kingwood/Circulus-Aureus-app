@@ -7,5 +7,11 @@ export default async () => {
   const documents = await readList("documents", []);
   const approvals = await readList("approvals", []);
 
-  return json({ events, members, messages, documents, approvals });
+  return json({
+    events,
+    members,
+    messages,
+    documents,
+    approvals
+  });
 };
