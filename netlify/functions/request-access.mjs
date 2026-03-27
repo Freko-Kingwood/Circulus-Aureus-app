@@ -1,21 +1,15 @@
-import { getStores, setJSON } from './_utils.mjs'
+import { getStores, json, setJSON } from './_utils.mjs'
 
-export default async (req) => {
+export const handler = async (event) => {
   try {
-    const body = await req.json()
+    const body = JSON.parse(event.body || '{}')
 
     const email = String(body.email || '').trim().toLowerCase()
     const name = String(body.name || '').trim()
     const note = String(body.note || '').trim()
 
     if (!name || !email) {
-      return new Response(
-        JSON.stringify({ error: 'Navn og e-mail er påkrævet' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
+      return json(400, { error: 'Navn og e-mail er påkrævet' })
     }
 
     const stores = getStores()
@@ -28,25 +22,8 @@ export default async (req) => {
       createdAt: new Date().toISOString()
     })
 
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        message: 'Anmodning gemt'
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
+    return json(200, { ok: true, message: 'Anmodning gemt' })
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: error?.message || 'Request-access fejlede'
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
+    return json(500, { error: error?.message || 'Request-access fejlede' })
   }
 }
