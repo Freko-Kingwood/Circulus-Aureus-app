@@ -1,16 +1,21 @@
-import { json, readList, writeList, requireAuth } from "./_utils.mjs";
+import { getStores, requireUser, isAdmin } from './_utils.mjs'
 
-export default async (req) => {
+export default async (req, context) => {
   try {
-    requireAuth(req);
-    const { email } = await req.json();
+    const user = await requireUser(context)
 
-    const approvals = await readList("approvals", []);
-    const next = approvals.filter((item) => item.email !== email);
+    if (!isAdmin(user)) {
+      return new Response('Forbidden', { status: 403 })
+    }
 
-    await writeList("approvals", next);
-    return json({ ok: true });
-  } catch (error) {
-    return json({ error: error.message }, 400);
+    const { email } = await req.json()
+
+    const store = getStores().approvals
+
+    await store.delete(email)
+
+    return new Response(JSON.stringify({ success: true }))
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 })
   }
-};
+}
