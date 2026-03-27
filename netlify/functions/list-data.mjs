@@ -1,8 +1,9 @@
-import { getStores, requireUser, listJSON } from './_utils.mjs'
+import { getStores, json, requireUser, listJSON } from './_utils.mjs'
 
-export default async (req, context) => {
+export const handler = async (event, context) => {
   try {
-    await requireUser(context)
+    requireUser(context)
+
     const stores = getStores()
 
     const [events, members, messages, approvals] = await Promise.all([
@@ -12,14 +13,8 @@ export default async (req, context) => {
       listJSON(stores.approvals)
     ])
 
-    return new Response(JSON.stringify({ events, members, messages, approvals }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return json(200, { events, members, messages, approvals })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message || 'Kunne ikke hente data' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return json(401, { error: error?.message || 'Kunne ikke hente data' })
   }
 }
