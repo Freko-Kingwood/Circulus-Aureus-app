@@ -15,7 +15,8 @@ export const handler = async (event, context) => {
       return json(400, { error: 'Email mangler' })
     }
 
-    await getStores().approvals.delete(safeEmail)
+    const stores = getStores(event)
+    await stores.approvals.delete(safeEmail)
 
     return json(200, { ok: true })
   } catch (error) {
