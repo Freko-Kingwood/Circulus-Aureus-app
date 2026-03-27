@@ -124,21 +124,34 @@
         <div id="messages-list" class="stack"></div>
       </section>
 
-      <section id="view-profile" class="view">
-        <div class="grid two">
-          <article class="card glass member-card">
-            <p class="eyebrow">Digitalt medlemskort</p>
-            <h3 id="profile-name">Medlem</h3>
-            <p id="profile-email">Ikke logget ind</p>
-            <div class="member-card-chip" id="profile-role">Medlem</div>
-          </article>
-          <article class="card glass">
-            <p class="eyebrow">Status</p>
-            <h3>Aktiv adgang</h3>
-            <p>Din adgang styres via Netlify Identity. Adminbrugere bestemmes af e-mails i app.js.</p>
-          </article>
-        </div>
-      </section>
+<section id="view-profile" class="view">
+  <div class="grid two">
+    
+    <article class="card glass member-card">
+      <p class="eyebrow">Digitalt medlemskort</p>
+      <h3 id="profile-name">Medlem</h3>
+      <p id="profile-email">Ikke logget ind</p>
+      <div class="member-card-chip" id="profile-role">Medlem</div>
+    </article>
+
+    <article class="card glass">
+      <p class="eyebrow">Status</p>
+      <h3>Aktiv adgang</h3>
+      <p>
+        Din adgang styres via Netlify Identity. Adminbrugere bestemmes af e-mails i app.js.
+      </p>
+    </article>
+
+  </div>
+
+  <!-- 🔥 LOG UD KNAP -->
+  <div style="margin-top:30px; text-align:center;">
+    <button id="logout-btn" class="btn btn-secondary" style="font-size:16px; padding:12px 24px;">
+      🚪 Log ud af logen
+    </button>
+  </div>
+
+</section>
 
       <section id="view-admin" class="view">
         <div class="section-head"><h2>Adminpanel</h2></div>
