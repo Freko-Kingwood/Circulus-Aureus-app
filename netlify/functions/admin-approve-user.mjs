@@ -1,32 +1,25 @@
-import { getStores, requireUser, isAdmin, getJSON, setJSON } from './_utils.mjs'
+import { getStores, json, requireUser, isAdmin, getJSON, setJSON } from './_utils.mjs'
 
-export default async (req, context) => {
+export const handler = async (event, context) => {
   try {
-    const user = await requireUser(context)
+    const user = requireUser(context)
+
     if (!isAdmin(user)) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return json(403, { error: 'Forbidden' })
     }
 
-    const { email } = await req.json()
-    const safeEmail = String(email || '').trim().toLowerCase()
+    const body = JSON.parse(event.body || '{}')
+    const safeEmail = String(body.email || '').trim().toLowerCase()
+
     if (!safeEmail) {
-      return new Response(JSON.stringify({ error: 'Email mangler' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return json(400, { error: 'Email mangler' })
     }
 
     const stores = getStores()
     const existing = await getJSON(stores.approvals, safeEmail)
 
     if (!existing) {
-      return new Response(JSON.stringify({ error: 'Bruger ikke fundet' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return json(404, { error: 'Bruger ikke fundet' })
     }
 
     await setJSON(stores.approvals, safeEmail, {
@@ -35,14 +28,8 @@ export default async (req, context) => {
       invitedAt: new Date().toISOString()
     })
 
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return json(200, { ok: true })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message || 'Godkendelse fejlede' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return json(500, { error: error?.message || 'Godkendelse fejlede' })
   }
 }
