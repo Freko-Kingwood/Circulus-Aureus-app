@@ -318,14 +318,14 @@ requestAccessForm?.addEventListener('submit', async (e) => {
   const payload = Object.fromEntries(form)
 
   try {
-    await fetchJSON('/.netlify/functions/request-access', {
+    const result = await fetchJSON('/.netlify/functions/request-access', {
       method: 'POST',
       body: JSON.stringify(payload)
     })
 
     e.target.reset()
     requestBox.classList.add('hidden')
-    showToast('Din anmodning er sendt')
+    showToast(result?.message || 'Din anmodning er sendt')
   } catch (error) {
     console.error('request-access fejl:', error)
     showToast(error?.message || 'Kunne ikke sende anmodning')
