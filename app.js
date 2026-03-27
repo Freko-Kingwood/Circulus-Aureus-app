@@ -79,17 +79,17 @@ async function fetchJSON(url, options = {}) {
     headers
   })
 
-  const text = await response.text()
-  let data = {}
+  const rawText = await response.text()
 
+  let data = null
   try {
-    data = text ? JSON.parse(text) : {}
+    data = rawText ? JSON.parse(rawText) : {}
   } catch {
-    data = {}
+    data = { error: rawText || 'Ukendt fejl' }
   }
 
   if (!response.ok) {
-    throw new Error(data.error || data.message || 'Ukendt fejl')
+    throw new Error(data?.error || data?.message || `HTTP ${response.status}`)
   }
 
   return data
