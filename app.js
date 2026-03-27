@@ -274,6 +274,13 @@ document.getElementById('logout-btn').addEventListener('click', () => {
   window.netlifyIdentity.logout();
 });
 
+const profileLogoutBtn = document.getElementById('profile-logout-btn');
+if (profileLogoutBtn) {
+  profileLogoutBtn.addEventListener('click', () => {
+    window.netlifyIdentity.logout();
+  });
+}
+
 navButtons.forEach((btn) => {
   btn.addEventListener('click', () => {
     const target = btn.dataset.view;
