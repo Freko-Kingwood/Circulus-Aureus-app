@@ -352,6 +352,8 @@ async function boot() {
   try {
     const hash = window.location.hash || ''
 
+    identityStatus.textContent = hash ? `Hash: ${hash}` : 'Ingen hash'
+
     if (hash.includes('invite_token')) {
       showToast('Invitation fundet. Behandler adgang...')
     }
