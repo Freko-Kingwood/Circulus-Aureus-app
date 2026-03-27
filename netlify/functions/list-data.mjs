@@ -1,8 +1,8 @@
-import { getStores, json, requireUser, listJSON } from './_utils.mjs'
+import { getStores, json, requireAuth, listJSON } from './_utils.mjs'
 
-export const handler = async (event, context) => {
+export const handler = async (event) => {
   try {
-    requireUser(context)
+    requireAuth(event)
 
     const stores = getStores(event)
 
@@ -13,8 +13,15 @@ export const handler = async (event, context) => {
       listJSON(stores.approvals)
     ])
 
-    return json(200, { events, members, messages, approvals })
+    return json(200, {
+      events,
+      members,
+      messages,
+      approvals
+    })
   } catch (error) {
-    return json(401, { error: error?.message || 'Kunne ikke hente data' })
+    return json(401, {
+      error: error?.message || 'Kunne ikke hente data'
+    })
   }
 }
