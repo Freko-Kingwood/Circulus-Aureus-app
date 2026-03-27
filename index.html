@@ -24,9 +24,19 @@
       <p class="login-copy">Privat medlemsplatform til begivenheder, referater, medlemmer og interne beskeder.</p>
 
       <div class="login-actions">
-        <button id="open-login" class="btn btn-primary" type="button">Log ind</button>
-        <button id="open-signup" class="btn btn-secondary" type="button">Anmod om adgang</button>
-      </div>
+  <button id="open-login" class="btn btn-primary" type="button">Log ind</button>
+  <button id="open-signup" class="btn btn-secondary" type="button">Anmod om adgang</button>
+</div>
+
+<div id="request-box" class="card glass hidden" style="margin-top:18px; text-align:left;">
+  <p class="eyebrow">Anmod om adgang</p>
+  <form id="request-access-form" class="form-stack">
+    <input name="name" placeholder="Dit navn" required />
+    <input name="email" type="email" placeholder="Din e-mail" required />
+    <textarea name="note" placeholder="Kort besked (valgfrit)"></textarea>
+    <button class="btn btn-primary" type="submit">Send anmodning</button>
+  </form>
+</div>
 
       <div class="status-card">
         <span class="status-dot"></span>
