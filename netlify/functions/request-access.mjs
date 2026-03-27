@@ -1,27 +1,15 @@
-import { json, readList, writeList } from "./_utils.mjs";
+import { getStores } from './_utils.mjs'
 
 export default async (req) => {
-  try {
-    const body = await req.json();
-    const email = (body.email || "").toLowerCase().trim();
+  const body = await req.json()
 
-    if (!email) {
-      return json({ error: "Manglende email" }, 400);
-    }
+  const store = getStores().approvals
 
-    const approvals = await readList("approvals", []);
-    const exists = approvals.some((item) => item.email === email);
+  await store.set(body.email, {
+    ...body,
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  })
 
-    if (!exists) {
-      approvals.unshift({
-        email,
-        createdAt: new Date().toISOString()
-      });
-      await writeList("approvals", approvals);
-    }
-
-    return json({ ok: true });
-  } catch (error) {
-    return json({ error: error.message }, 400);
-  }
-};
+  return new Response(JSON.stringify({ success: true }))
+}
