@@ -350,19 +350,44 @@ document.addEventListener('click', async (e) => {
 
 async function boot() {
   try {
-    const result = await handleAuthCallback()
-    const user = result?.user || await getUser()
+    const hash = window.location.hash || ''
+
+    if (hash.includes('invite_token')) {
+      showToast('Invitation fundet. Behandler adgang...')
+    }
+
+    let callbackUser = null
+
+    try {
+      const result = await handleAuthCallback()
+      callbackUser = result?.user || null
+    } catch (error) {
+      console.error('handleAuthCallback fejl:', error)
+    }
+
+    const user = callbackUser || await getUser()
 
     if (user) {
       showAuthenticated(user)
       await loadData()
+
+      if (window.location.hash.includes('invite_token')) {
+        history.replaceState({}, document.title, window.location.pathname)
+      }
     } else {
       showLoggedOut()
+
+      if (hash.includes('invite_token')) {
+        showToast('Invitationen blev åbnet, men login blev ikke fuldført.')
+      }
     }
   } catch (error) {
+    console.error('boot fejl:', error)
     showLoggedOut()
     showToast(error?.message || 'Identity-fejl')
   }
 }
 
-boot()
+window.addEventListener('load', () => {
+  boot()
+})
