@@ -12,10 +12,12 @@ export function getStores() {
 
 export async function requireUser(context) {
   const user = await getUser(context)
-  if (!user) throw new Error('Not authenticated')
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
   return user
 }
 
 export function isAdmin(user) {
-  return user.email === 'frekopetersen1998@gmail.com'
+  return (user?.email || '').toLowerCase() === 'frekopetersen1998@gmail.com'
 }
