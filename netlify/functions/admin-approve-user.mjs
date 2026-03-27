@@ -15,7 +15,7 @@ export const handler = async (event, context) => {
       return json(400, { error: 'Email mangler' })
     }
 
-    const stores = getStores()
+    const stores = getStores(event)
     const existing = await getJSON(stores.approvals, safeEmail)
 
     if (!existing) {
