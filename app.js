@@ -40,13 +40,6 @@ function showToast(message) {
   setTimeout(() => toast.classList.add('hidden'), 3200);
 }
 
-function setIdentityFrameActive(active) {
-  document.querySelectorAll('iframe[title="Netlify identity widget"]').forEach((frame) => {
-    frame.style.pointerEvents = active ? 'auto' : 'none';
-    frame.style.display = active ? 'block' : 'none';
-  });
-}
-
 function getInitials(text) {
   return (text || 'CA')
     .split(/\s|@|\./)
@@ -249,6 +242,8 @@ function showAuthenticated(user) {
 
   adminTab.classList.toggle('hidden', !state.isAdmin);
   if (adminMobileTab) adminMobileTab.classList.toggle('hidden', !state.isAdmin);
+
+  activateView('dashboard');
 }
 
 function showLoggedOut() {
@@ -265,24 +260,23 @@ function showLoggedOut() {
 }
 
 document.getElementById('open-login').addEventListener('click', () => {
-  setIdentityFrameActive(true);
-  window.netlifyIdentity.open('login');
-});
-
-document.getElementById('open-signup').addEventListener('click', () => {
-  if (requestBox) {
-    requestBox.classList.toggle('hidden');
+  if (window.netlifyIdentity) {
+    window.netlifyIdentity.open('login');
   }
 });
 
+document.getElementById('open-request').addEventListener('click', () => {
+  if (requestBox) requestBox.classList.toggle('hidden');
+});
+
 document.getElementById('logout-btn').addEventListener('click', () => {
-  window.netlifyIdentity.logout();
+  if (window.netlifyIdentity) window.netlifyIdentity.logout();
 });
 
 const profileLogoutBtn = document.getElementById('profile-logout-btn');
 if (profileLogoutBtn) {
   profileLogoutBtn.addEventListener('click', () => {
-    window.netlifyIdentity.logout();
+    if (window.netlifyIdentity) window.netlifyIdentity.logout();
   });
 }
 
@@ -399,11 +393,7 @@ if (requestAccessForm) {
       });
 
       e.target.reset();
-
-      if (requestBox) {
-        requestBox.classList.add('hidden');
-      }
-
+      if (requestBox) requestBox.classList.add('hidden');
       showToast('Din anmodning er sendt. Du får adgang, når du bliver inviteret.');
     } catch (error) {
       showToast(error.message);
@@ -485,42 +475,11 @@ document.addEventListener('click', async (e) => {
 });
 
 if (window.netlifyIdentity) {
-  window.netlifyIdentity.init({ locale: 'en' });
-
-  window.netlifyIdentity.on('open', () => {
-    setIdentityFrameActive(true);
-  });
-
-  window.netlifyIdentity.on('close', () => {
-    setIdentityFrameActive(false);
-  });
-
-  window.netlifyIdentity.on('login', async (user) => {
-    setIdentityFrameActive(false);
-    showAuthenticated(user);
-    window.netlifyIdentity.close();
-
-    try {
-      await loadData();
-      activateView('dashboard');
-    } catch (error) {
-      showToast(error.message);
-    }
-  });
-
-  window.netlifyIdentity.on('logout', () => {
-    setIdentityFrameActive(false);
-    showLoggedOut();
-  });
-
   window.netlifyIdentity.on('init', async (user) => {
-    setIdentityFrameActive(false);
-
     if (user) {
       showAuthenticated(user);
       try {
         await loadData();
-        activateView('dashboard');
       } catch (error) {
         showToast(error.message);
       }
@@ -529,9 +488,26 @@ if (window.netlifyIdentity) {
     }
   });
 
+  window.netlifyIdentity.on('login', async (user) => {
+    showAuthenticated(user);
+    window.netlifyIdentity.close();
+
+    try {
+      await loadData();
+    } catch (error) {
+      showToast(error.message);
+    }
+  });
+
+  window.netlifyIdentity.on('logout', () => {
+    showLoggedOut();
+  });
+
   window.netlifyIdentity.on('error', (error) => {
     showToast(error?.message || 'Identity-fejl');
   });
+
+  window.netlifyIdentity.init();
 } else {
   showToast('Netlify Identity blev ikke indlæst');
 }
