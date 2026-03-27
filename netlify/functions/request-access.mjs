@@ -12,7 +12,7 @@ export const handler = async (event) => {
       return json(400, { error: 'Navn og e-mail er påkrævet' })
     }
 
-    const stores = getStores()
+    const stores = getStores(event)
 
     await setJSON(stores.approvals, email, {
       name,
