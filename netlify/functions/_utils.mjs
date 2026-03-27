@@ -1,6 +1,8 @@
-import { getStore } from '@netlify/blobs'
+import { connectLambda, getStore } from '@netlify/blobs'
 
-export function getStores() {
+export function getStores(event) {
+  connectLambda(event)
+
   return {
     events: getStore('events'),
     members: getStore('members'),
@@ -25,9 +27,7 @@ export function getCurrentUser(context) {
 
 export function requireUser(context) {
   const user = getCurrentUser(context)
-  if (!user) {
-    throw new Error('Not authenticated')
-  }
+  if (!user) throw new Error('Not authenticated')
   return user
 }
 
