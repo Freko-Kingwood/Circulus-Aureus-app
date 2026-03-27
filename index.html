@@ -522,8 +522,11 @@
             <p class="muted">
               Din adgang styres via Netlify Identity. Admin-brugere styres via e-mail i app.js og functions.
             </p>
-            <div style="margin-top:18px;">
+            <div style="margin-top:18px; display:grid; gap:12px;">
               <button id="logout-btn" class="btn btn-secondary" type="button">Log ud</button>
+              <div id="profile-admin-link-wrap" class="hidden">
+                <button id="open-admin-from-profile" class="btn btn-secondary" type="button">Gå til adminpanel</button>
+              </div>
             </div>
           </article>
         </div>
@@ -554,7 +557,6 @@
       <button class="nav-item" data-view="members" type="button">Medl.</button>
       <button class="nav-item" data-view="messages" type="button">Besked</button>
       <button class="nav-item" data-view="profile" type="button">Profil</button>
-      <button id="admin-nav-btn" class="nav-item hidden" data-view="admin" type="button">Admin</button>
     </nav>
   </div>
 
