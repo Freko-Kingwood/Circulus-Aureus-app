@@ -1,17 +1,25 @@
-import { json, readList } from "./_utils.mjs";
+import { getStores, requireUser } from './_utils.mjs'
 
-export default async () => {
-  const events = await readList("events", []);
-  const members = await readList("members", []);
-  const messages = await readList("messages", []);
-  const documents = await readList("documents", []);
-  const approvals = await readList("approvals", []);
+export default async (req, context) => {
+  try {
+    await requireUser(context)
 
-  return json({
-    events,
-    members,
-    messages,
-    documents,
-    approvals
-  });
-};
+    const stores = getStores()
+
+    const [events, members, messages, approvals] = await Promise.all([
+      stores.events.list(),
+      stores.members.list(),
+      stores.messages.list(),
+      stores.approvals.list()
+    ])
+
+    return new Response(JSON.stringify({
+      events: events.map(e => e.value),
+      members: members.map(m => m.value),
+      messages: messages.map(m => m.value),
+      approvals: approvals.map(a => a.value)
+    }), { status: 200 })
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 401 })
+  }
+}
