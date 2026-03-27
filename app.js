@@ -47,7 +47,7 @@ function showToast(message) {
   toast.style.right = '16px'
   toast.style.bottom = '96px'
   toast.style.zIndex = '9999'
-  toast.style.maxWidth = '320px'
+  toast.style.maxWidth = '340px'
   toast.style.padding = '12px 16px'
   toast.style.borderRadius = '14px'
   toast.style.background = 'rgba(37, 9, 17, 0.96)'
@@ -55,7 +55,7 @@ function showToast(message) {
   toast.style.color = '#fff'
   toast.style.boxShadow = '0 14px 30px rgba(0,0,0,.28)'
   document.body.appendChild(toast)
-  setTimeout(() => toast.remove(), 3200)
+  setTimeout(() => toast.remove(), 3600)
 }
 
 function isAdminEmail(email) {
@@ -67,11 +67,34 @@ function getInviteToken() {
   return new URLSearchParams(hash.replace(/^#/, '')).get('invite_token')
 }
 
+async function getAccessToken() {
+  if (!currentUser) return null
+
+  if (currentUser.token?.access_token) {
+    return currentUser.token.access_token
+  }
+
+  if (typeof currentUser.jwt === 'function') {
+    try {
+      return await currentUser.jwt()
+    } catch {
+      return null
+    }
+  }
+
+  return null
+}
+
 async function fetchJSON(url, options = {}) {
   const headers = { ...(options.headers || {}) }
 
   if (!(options.body instanceof FormData) && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json'
+  }
+
+  const token = await getAccessToken()
+  if (token) {
+    headers.authorization = `Bearer ${token}`
   }
 
   const response = await fetch(url, {
@@ -111,7 +134,9 @@ function showAuthenticated(user) {
   profileName.textContent = shortName
   profileEmail.textContent = email
 
-  profileAdminLinkWrap.classList.toggle('hidden', !admin)
+  if (profileAdminLinkWrap) {
+    profileAdminLinkWrap.classList.toggle('hidden', !admin)
+  }
 }
 
 function showLoggedOut(status = 'Afventer login') {
