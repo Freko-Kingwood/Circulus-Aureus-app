@@ -1,4 +1,4 @@
-import { getUser, handleAuthCallback, login, logout } from '@netlify/identity'
+import { getUser, handleAuthCallback, login, logout, acceptInvite } from '@netlify/identity'
 
 const authShell = document.getElementById('auth-shell')
 const appShell = document.getElementById('app-shell')
