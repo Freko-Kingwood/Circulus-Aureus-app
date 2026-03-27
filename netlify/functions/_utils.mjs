@@ -1,4 +1,15 @@
+import jwt from 'jsonwebtoken'
 import { connectLambda, getStore } from '@netlify/blobs'
+
+export function json(statusCode, body) {
+  return {
+    statusCode,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  }
+}
 
 export function getStores(event) {
   connectLambda(event)
@@ -11,24 +22,33 @@ export function getStores(event) {
   }
 }
 
-export function json(statusCode, body) {
-  return {
-    statusCode,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
+export function requireAuth(event) {
+  const authHeader =
+    event?.headers?.authorization ||
+    event?.headers?.Authorization ||
+    ''
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new Error('Not authenticated')
   }
-}
 
-export function getCurrentUser(context) {
-  return context?.clientContext?.user || null
-}
+  const token = authHeader.replace('Bearer ', '').trim()
 
-export function requireUser(context) {
-  const user = getCurrentUser(context)
-  if (!user) throw new Error('Not authenticated')
-  return user
+  if (!token) {
+    throw new Error('Not authenticated')
+  }
+
+  try {
+    const decoded = jwt.decode(token)
+
+    if (!decoded || typeof decoded !== 'object') {
+      throw new Error('Invalid token')
+    }
+
+    return decoded
+  } catch {
+    throw new Error('Not authenticated')
+  }
 }
 
 export function isAdmin(user) {
