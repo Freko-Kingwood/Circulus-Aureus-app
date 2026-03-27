@@ -476,6 +476,16 @@ document.addEventListener('click', async (e) => {
 
 if (window.netlifyIdentity) {
   window.netlifyIdentity.on('init', async (user) => {
+    const hash = window.location.hash || '';
+
+    if (
+      hash.includes('invite_token') ||
+      hash.includes('confirmation_token') ||
+      hash.includes('recovery_token')
+    ) {
+      window.netlifyIdentity.open();
+    }
+
     if (user) {
       showAuthenticated(user);
       try {
