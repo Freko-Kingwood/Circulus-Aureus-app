@@ -1,5 +1,4 @@
 import { getStore } from '@netlify/blobs'
-import { getUser } from '@netlify/functions'
 
 export function getStores() {
   return {
@@ -10,9 +9,25 @@ export function getStores() {
   }
 }
 
-export async function requireUser(context) {
-  const user = await getUser(context)
-  if (!user) throw new Error('Not authenticated')
+export function json(statusCode, body) {
+  return {
+    statusCode,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  }
+}
+
+export function getCurrentUser(context) {
+  return context?.clientContext?.user || null
+}
+
+export function requireUser(context) {
+  const user = getCurrentUser(context)
+  if (!user) {
+    throw new Error('Not authenticated')
+  }
   return user
 }
 
@@ -33,7 +48,7 @@ export async function getJSON(store, key) {
 
 export async function listJSON(store) {
   const result = await store.list()
-  const keys = (result?.blobs || []).map((b) => b.key)
+  const keys = (result?.blobs || []).map((blob) => blob.key)
   const values = await Promise.all(keys.map((key) => getJSON(store, key)))
   return values.filter(Boolean)
 }
