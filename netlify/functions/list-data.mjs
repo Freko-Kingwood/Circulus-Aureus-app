@@ -4,7 +4,7 @@ export const handler = async (event, context) => {
   try {
     requireUser(context)
 
-    const stores = getStores()
+    const stores = getStores(event)
 
     const [events, members, messages, approvals] = await Promise.all([
       listJSON(stores.events),
