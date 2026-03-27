@@ -1,34 +1,24 @@
-import { getStores, requireUser, isAdmin } from './_utils.mjs'
+import { getStores, json, requireUser, isAdmin } from './_utils.mjs'
 
-export default async (req, context) => {
+export const handler = async (event, context) => {
   try {
-    const user = await requireUser(context)
+    const user = requireUser(context)
+
     if (!isAdmin(user)) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return json(403, { error: 'Forbidden' })
     }
 
-    const { email } = await req.json()
-    const safeEmail = String(email || '').trim().toLowerCase()
+    const body = JSON.parse(event.body || '{}')
+    const safeEmail = String(body.email || '').trim().toLowerCase()
+
     if (!safeEmail) {
-      return new Response(JSON.stringify({ error: 'Email mangler' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return json(400, { error: 'Email mangler' })
     }
 
     await getStores().approvals.delete(safeEmail)
 
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return json(200, { ok: true })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message || 'Afvisning fejlede' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return json(500, { error: error?.message || 'Afvisning fejlede' })
   }
 }
