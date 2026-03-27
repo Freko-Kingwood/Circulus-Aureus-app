@@ -5,65 +5,121 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Circulus Aureus</title>
 
+  <meta name="theme-color" content="#2b0f16" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
   <link rel="stylesheet" href="styles.css" />
+
+  <!-- Netlify Identity -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 
 <body>
 
-  <!-- LOGIN SCREEN -->
+  <!-- BAGGRUND -->
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <!-- LOGIN / FORSIDE -->
   <div id="auth-shell" class="auth-shell">
+
     <div class="login-panel glass">
 
       <div class="crest-wrap">
-        <img src="assets/crest.jpeg" alt="Circulus Aureus våbenskjold" />
+        <img src="assets/crest.jpeg" class="crest" />
       </div>
 
       <p class="eyebrow">Circulus Aureus</p>
       <h1>Det digitale logerum</h1>
+
       <p class="login-copy">
-        Privat medlemsplatform til begivenheder, referater og beskeder.
+        Privat medlemsplatform til begivenheder, referater, medlemmer og interne beskeder.
       </p>
 
       <div class="login-actions">
-        <button id="open-login" class="btn btn-primary">
-          Log ind
-        </button>
+        <button id="open-login" class="btn btn-primary">Log ind</button>
+        <button id="open-signup" class="btn btn-secondary">Anmod om adgang</button>
       </div>
 
-      <div class="status-card">
-        <span id="identity-status">Afventer login</span>
-      </div>
+      <p id="request-info" class="muted hidden" style="margin-top:12px;">
+        Din anmodning er sendt. Afvent godkendelse fra en administrator.
+      </p>
+
+      <p class="muted small" style="margin-top:16px;">
+        Login kører via Netlify Identity. Admin styres via e-mails i app.js
+      </p>
 
     </div>
   </div>
 
-  <!-- APP (SKJULT INDTIL LOGIN) -->
+  <!-- APP -->
   <div id="app-shell" class="hidden">
 
     <main>
-
-      <!-- PROFIL -->
-      <section>
-        <article class="card glass">
-          <p class="eyebrow">Profil</p>
-          <h3>Du er logget ind</h3>
-          <p id="identity-status"></p>
-
-          <button id="logout-btn" class="btn btn-secondary">
-            🚪 Log ud
-          </button>
-        </article>
+      <section id="view-dashboard">
+        <h1>Velkommen</h1>
+        <p>Du er logget ind i logen.</p>
       </section>
-
     </main>
+
+    <!-- NAV -->
+    <nav class="mobile-nav glass">
+      <button class="nav-item active">Hjem</button>
+      <button class="nav-item">Events</button>
+      <button class="nav-item">Referat</button>
+      <button class="nav-item">Medl.</button>
+      <button class="nav-item">Profil</button>
+    </nav>
 
   </div>
 
   <!-- TOAST -->
   <div id="toast" class="toast hidden"></div>
 
-  <!-- 🔥 VIGTIG: MODULE SCRIPT -->
-  <script type="module" src="app.js"></script>
+  <!-- APP JS -->
+  <script src="app.js"></script>
+
+  <!-- 🔥 IDENTITY LOGIK -->
+  <script>
+    if (window.netlifyIdentity) {
+
+      netlifyIdentity.on("init", user => {
+        if (user) {
+          document.getElementById("auth-shell").classList.add("hidden");
+          document.getElementById("app-shell").classList.remove("hidden");
+        }
+      });
+
+      netlifyIdentity.on("login", user => {
+        netlifyIdentity.close();
+
+        document.getElementById("auth-shell").classList.add("hidden");
+        document.getElementById("app-shell").classList.remove("hidden");
+      });
+
+      // 🔥 FIX INVITE FLOW
+      netlifyIdentity.on("open", () => {
+        if (window.location.hash.includes("invite_token")) {
+          netlifyIdentity.open("signup");
+        }
+      });
+    }
+
+    // LOGIN KNAP
+    document.getElementById("open-login").onclick = () => {
+      netlifyIdentity.open("login");
+    };
+
+    // 🔥 ANMOD KNAP (VIGTIG)
+    document.getElementById("open-signup").onclick = () => {
+      document.getElementById("request-info").classList.remove("hidden");
+    };
+  </script>
 
 </body>
 </html>
