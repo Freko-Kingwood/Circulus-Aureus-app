@@ -1,4 +1,4 @@
-import { getStores } from './_utils.mjs'
+import { getStores, setJSON } from './_utils.mjs'
 
 export default async (req) => {
   try {
@@ -7,19 +7,16 @@ export default async (req) => {
     const name = String(body.name || '').trim()
     const note = String(body.note || '').trim()
 
-    if (!email) {
-      return new Response(
-        JSON.stringify({ error: 'Email mangler' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
+    if (!email || !name) {
+      return new Response(JSON.stringify({ error: 'Navn og e-mail mangler' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
     }
 
     const store = getStores().approvals
 
-    await store.set(email, {
+    await setJSON(store, email, {
       email,
       name,
       note,
@@ -27,20 +24,14 @@ export default async (req) => {
       createdAt: new Date().toISOString()
     })
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
-  } catch (err) {
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message || 'Request-access fejlede' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 }
