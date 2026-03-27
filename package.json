@@ -2,8 +2,9 @@
   "name": "circulus-aureus-app",
   "private": true,
   "type": "module",
-  "dependencies": {
-    "@netlify/blobs": "^9.0.4",
-    "@netlify/functions": "^4.2.4"
-  }
+"dependencies": {
+  "@netlify/blobs": "^9.0.4",
+  "@netlify/functions": "^4.2.4",
+  "@netlify/identity": "^1.9.0"
+}
 }
