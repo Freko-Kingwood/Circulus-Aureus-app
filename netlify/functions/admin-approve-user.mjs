@@ -1,8 +1,15 @@
-import { getStores, json, requireUser, isAdmin, getJSON, setJSON } from './_utils.mjs'
+import {
+  getStores,
+  json,
+  requireAuth,
+  isAdmin,
+  getJSON,
+  setJSON
+} from './_utils.mjs'
 
-export const handler = async (event, context) => {
+export const handler = async (event) => {
   try {
-    const user = requireUser(context)
+    const user = requireAuth(event)
 
     if (!isAdmin(user)) {
       return json(403, { error: 'Forbidden' })
@@ -28,8 +35,13 @@ export const handler = async (event, context) => {
       invitedAt: new Date().toISOString()
     })
 
-    return json(200, { ok: true })
+    return json(200, {
+      ok: true,
+      message: 'Bruger markeret som inviteret'
+    })
   } catch (error) {
-    return json(500, { error: error?.message || 'Godkendelse fejlede' })
+    return json(500, {
+      error: error?.message || 'Godkendelse fejlede'
+    })
   }
 }
