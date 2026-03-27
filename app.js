@@ -27,7 +27,8 @@ const memberList = document.getElementById('member-list')
 const messageList = document.getElementById('message-list')
 const approvalList = document.getElementById('approval-list')
 
-const adminNavBtn = document.getElementById('admin-nav-btn')
+const profileAdminLinkWrap = document.getElementById('profile-admin-link-wrap')
+const openAdminFromProfile = document.getElementById('open-admin-from-profile')
 
 const adminEmails = ['frekopetersen1998@gmail.com']
 
@@ -110,7 +111,7 @@ function showAuthenticated(user) {
   profileName.textContent = shortName
   profileEmail.textContent = email
 
-  adminNavBtn.classList.toggle('hidden', !admin)
+  profileAdminLinkWrap.classList.toggle('hidden', !admin)
 }
 
 function showLoggedOut(status = 'Afventer login') {
@@ -232,7 +233,7 @@ function renderApprovals() {
           <div class="item-actions">
             <button type="button" data-approve-email="${item.email}">Markér som inviteret</button>
             <button type="button" data-copy-email="${item.email}">Kopiér e-mail</button>
-            <button class="danger" type="button" data-reject-email="${item.email}">Afvis</button>
+            <button class="btn-danger" type="button" data-reject-email="${item.email}">Afvis</button>
           </div>
         </article>
       `
@@ -276,6 +277,18 @@ document.getElementById('logout-btn')?.addEventListener('click', async () => {
   } catch {}
   currentUser = null
   showLoggedOut()
+})
+
+openAdminFromProfile?.addEventListener('click', () => {
+  if (isAdminEmail(currentUser?.email || '')) {
+    activateView('admin')
+  }
+})
+
+document.querySelectorAll('.nav-item[data-view]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    activateView(btn.dataset.view)
+  })
 })
 
 loginForm?.addEventListener('submit', async (e) => {
@@ -362,14 +375,6 @@ inviteForm?.addEventListener('submit', async (e) => {
 })
 
 document.addEventListener('click', async (e) => {
-  const navBtn = e.target.closest('.nav-item[data-view]')
-  if (navBtn) {
-    const view = navBtn.dataset.view
-    if (view === 'admin' && !isAdminEmail(currentUser?.email || '')) return
-    activateView(view)
-    return
-  }
-
   const approveBtn = e.target.closest('[data-approve-email]')
   if (approveBtn) {
     try {
