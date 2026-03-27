@@ -170,7 +170,6 @@ function renderAll() {
   const approvalsHost = document.getElementById('approval-list');
   if (approvalsHost) {
     approvalsHost.innerHTML = '';
-
     const pending = (state.data.approvals || []).filter((item) => item.status !== 'invited');
 
     if (!pending.length) {
@@ -236,9 +235,9 @@ function showAuthenticated(user) {
 
   profileName.textContent = email.split('@')[0] || 'Medlem';
   profileEmail.textContent = email;
+  profileRole.textContent = state.isAdmin ? 'Admin' : 'Medlem';
 
   rolePill.textContent = state.isAdmin ? 'Admin' : 'Medlem';
-  profileRole.textContent = state.isAdmin ? 'Admin' : 'Medlem';
 
   adminTab.classList.toggle('hidden', !state.isAdmin);
   if (adminMobileTab) adminMobileTab.classList.toggle('hidden', !state.isAdmin);
@@ -474,17 +473,28 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+function maybeOpenIdentityFromInviteLink() {
+  const hash = window.location.hash || '';
+  const search = window.location.search || '';
+  const full = `${hash} ${search}`;
+
+  if (
+    full.includes('invite_token') ||
+    full.includes('confirmation_token') ||
+    full.includes('recovery_token') ||
+    full.includes('email_change_token')
+  ) {
+    setTimeout(() => {
+      if (window.netlifyIdentity) {
+        window.netlifyIdentity.open();
+      }
+    }, 300);
+  }
+}
+
 if (window.netlifyIdentity) {
   window.netlifyIdentity.on('init', async (user) => {
-    const hash = window.location.hash || '';
-
-    if (
-      hash.includes('invite_token') ||
-      hash.includes('confirmation_token') ||
-      hash.includes('recovery_token')
-    ) {
-      window.netlifyIdentity.open();
-    }
+    maybeOpenIdentityFromInviteLink();
 
     if (user) {
       showAuthenticated(user);
@@ -497,6 +507,9 @@ if (window.netlifyIdentity) {
       showLoggedOut();
     }
   });
+
+  window.netlifyIdentity.on('open', () => {});
+  window.netlifyIdentity.on('close', () => {});
 
   window.netlifyIdentity.on('login', async (user) => {
     showAuthenticated(user);
