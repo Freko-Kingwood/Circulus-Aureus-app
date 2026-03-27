@@ -19,6 +19,7 @@ const miniAvatar = document.getElementById('mini-avatar');
 const profileName = document.getElementById('profile-name');
 const profileEmail = document.getElementById('profile-email');
 const profileRole = document.getElementById('profile-role');
+const requestBox = document.getElementById('request-box');
 
 const viewEls = {
   dashboard: document.getElementById('view-dashboard'),
@@ -176,18 +177,23 @@ function renderAll() {
   const approvalsHost = document.getElementById('approval-list');
   if (approvalsHost) {
     approvalsHost.innerHTML = '';
-    if (!state.data.approvals?.length) {
+
+    const pending = (state.data.approvals || []).filter((item) => item.status !== 'invited');
+
+    if (!pending.length) {
       approvalsHost.innerHTML = '<article class="card glass"><p>Ingen afventende godkendelser.</p></article>';
     } else {
-      state.data.approvals.forEach((item) => {
+      pending.forEach((item) => {
         const el = document.createElement('article');
         el.className = 'card glass';
         el.innerHTML = `
-          <p class="eyebrow">Afventer godkendelse</p>
-          <h3>${item.email}</h3>
-          <p>Oprettet: ${item.createdAt || ''}</p>
+          <p class="eyebrow">Afventende godkendelse</p>
+          <h3>${item.name || 'Ukendt navn'}</h3>
+          <p>${item.email}</p>
+          <p>${item.note || ''}</p>
           <div class="event-actions">
-            <button class="btn btn-primary" data-approve-email="${item.email}" type="button">Godkend</button>
+            <button class="btn btn-primary" data-approve-email="${item.email}" type="button">Markér som inviteret</button>
+            <button class="btn btn-secondary" data-copy-email="${item.email}" type="button">Kopiér e-mail</button>
             <button class="btn btn-secondary" data-reject-email="${item.email}" type="button">Afvis</button>
           </div>
         `;
@@ -263,10 +269,9 @@ document.getElementById('open-login').addEventListener('click', () => {
   window.netlifyIdentity.open('login');
 });
 
-document.getElementById('open-signup').addEventListener('click', async () => {
-  if (window.netlifyIdentity) {
-    setIdentityFrameActive(true);
-    window.netlifyIdentity.open('signup');
+document.getElementById('open-signup').addEventListener('click', () => {
+  if (requestBox) {
+    requestBox.classList.toggle('hidden');
   }
 });
 
@@ -381,6 +386,31 @@ document.getElementById('document-form').addEventListener('submit', async (e) =>
   }
 });
 
+const requestAccessForm = document.getElementById('request-access-form');
+if (requestAccessForm) {
+  requestAccessForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+
+    try {
+      await fetchJSON('/.netlify/functions/request-access', {
+        method: 'POST',
+        body: JSON.stringify(Object.fromEntries(form))
+      });
+
+      e.target.reset();
+
+      if (requestBox) {
+        requestBox.classList.add('hidden');
+      }
+
+      showToast('Din anmodning er sendt. Du får adgang, når du bliver inviteret.');
+    } catch (error) {
+      showToast(error.message);
+    }
+  });
+}
+
 document.addEventListener('click', async (e) => {
   const rsvpBtn = e.target.closest('[data-rsvp]');
   if (rsvpBtn) {
@@ -423,7 +453,7 @@ document.addEventListener('click', async (e) => {
         body: JSON.stringify({ email: approveBtn.dataset.approveEmail })
       });
       await loadData();
-      showToast('Bruger godkendt');
+      showToast('Markeret som inviteret');
     } catch (error) {
       showToast(error.message);
     }
@@ -442,6 +472,16 @@ document.addEventListener('click', async (e) => {
       showToast(error.message);
     }
   }
+
+  const copyBtn = e.target.closest('[data-copy-email]');
+  if (copyBtn) {
+    try {
+      await navigator.clipboard.writeText(copyBtn.dataset.copyEmail);
+      showToast('E-mail kopieret');
+    } catch {
+      showToast('Kunne ikke kopiere e-mail');
+    }
+  }
 });
 
 if (window.netlifyIdentity) {
@@ -455,19 +495,9 @@ if (window.netlifyIdentity) {
     setIdentityFrameActive(false);
   });
 
-  window.netlifyIdentity.on('signup', async (user) => {
-    try {
-      await fetchJSON('/.netlify/functions/request-access', {
-        method: 'POST',
-        body: JSON.stringify({ email: user?.email || '' })
-      });
-    } catch {}
-  });
-
   window.netlifyIdentity.on('login', async (user) => {
     setIdentityFrameActive(false);
     showAuthenticated(user);
-    if (adminMobileTab && state.isAdmin) adminMobileTab.classList.remove('hidden');
     window.netlifyIdentity.close();
 
     try {
@@ -481,7 +511,6 @@ if (window.netlifyIdentity) {
   window.netlifyIdentity.on('logout', () => {
     setIdentityFrameActive(false);
     showLoggedOut();
-    if (adminMobileTab) adminMobileTab.classList.add('hidden');
   });
 
   window.netlifyIdentity.on('init', async (user) => {
