@@ -22,8 +22,13 @@ export const handler = async (event) => {
       createdAt: new Date().toISOString()
     })
 
-    return json(200, { ok: true, message: 'Anmodning gemt' })
+    return json(200, {
+      ok: true,
+      message: 'Anmodning gemt'
+    })
   } catch (error) {
-    return json(500, { error: error?.message || 'Request-access fejlede' })
+    return json(500, {
+      error: error?.message || 'Request-access fejlede'
+    })
   }
 }
