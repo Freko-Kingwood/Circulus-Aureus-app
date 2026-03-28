@@ -1,35 +1,50 @@
-import {
-  getStores,
-  json,
-  requireAuth,
-  isAdmin
-} from './_utils.mjs'
+import { json, parseBody, requireAdmin, supabase } from './_utils.mjs'
 
-export const handler = async (event) => {
+export default async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return json({ error: 'Method not allowed' }, 405)
+  }
+
   try {
-    const user = requireAuth(event)
+    await requireAdmin(event)
 
-    if (!isAdmin(user)) {
-      return json(403, { error: 'Forbidden' })
+    const body = parseBody(event)
+    const email = String(body.email || '').trim().toLowerCase()
+
+    if (!email) {
+      return json({ error: 'E-mail mangler' }, 400)
     }
 
-    const body = JSON.parse(event.body || '{}')
-    const safeEmail = String(body.email || '').trim().toLowerCase()
+    const { error: requestError } = await supabase
+      .from('access_requests')
+      .update({
+        status: 'rejected',
+        handled_at: new Date().toISOString()
+      })
+      .eq('email', email)
 
-    if (!safeEmail) {
-      return json(400, { error: 'Email mangler' })
-    }
+    if (requestError) throw requestError
 
-    const stores = getStores(event)
-    await stores.approvals.delete(safeEmail)
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert(
+        {
+          email,
+          full_name: email.split('@')[0],
+          role: 'member',
+          status: 'rejected'
+        },
+        { onConflict: 'email' }
+      )
 
-    return json(200, {
+    if (profileError) throw profileError
+
+    return json({
       ok: true,
       message: 'Bruger afvist'
     })
   } catch (error) {
-    return json(500, {
-      error: error?.message || 'Afvisning fejlede'
-    })
+    const code = error.message === 'Not authenticated' ? 401 : error.message === 'Forbidden' ? 403 : 500
+    return json({ error: error.message || 'Kunne ikke afvise bruger' }, code)
   }
 }
