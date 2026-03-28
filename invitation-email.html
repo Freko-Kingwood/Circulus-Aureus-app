@@ -1,0 +1,30 @@
+<p style="margin:0 0 12px;font-family:Georgia,serif;font-size:18px;color:#d7b46a;">
+  CIRCULUS AUREUS
+</p>
+
+<h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:40px;line-height:1.1;color:#f8efe4;">
+  Opret adgangskode
+</h1>
+
+<p style="margin:0 0 20px;font-family:Arial,sans-serif;font-size:18px;line-height:1.6;color:#e9ddd1;">
+  Din invitation er fundet. Tryk på knappen herunder for at vælge en adgangskode og aktivere din konto.
+</p>
+
+<p style="margin:28px 0;">
+  <a
+    href="{{ .SiteURL }}/invite.html#invite_token={{ .Token }}"
+    style="display:inline-block;padding:16px 28px;border-radius:999px;background:#d7b46a;color:#2a1809;text-decoration:none;font-family:Georgia,serif;font-size:20px;"
+  >
+    Aktivér konto
+  </a>
+</p>
+
+<p style="margin:20px 0 0;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#cdbfb4;">
+  Hvis knappen ikke virker, kan du åbne dette link manuelt:
+</p>
+
+<p style="margin:10px 0 0;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;word-break:break-word;">
+  <a href="{{ .SiteURL }}/invite.html#invite_token={{ .Token }}" style="color:#d7b46a;">
+    {{ .SiteURL }}/invite.html#invite_token={{ .Token }}
+  </a>
+</p>
