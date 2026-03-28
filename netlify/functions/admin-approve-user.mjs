@@ -23,22 +23,18 @@ export default async (event) => {
 
     if (requestReadError) throw requestReadError
 
-    if (!accessRequest) {
-      return json({ error: 'Anmodning ikke fundet' }, 404)
-    }
+    const nameFromRequest =
+      String(accessRequest?.name || '').trim() || email.split('@')[0]
 
     const { error: requestUpdateError } = await supabase
       .from('access_requests')
       .update({
-        status: 'approved',
+        status: 'rejected',
         handled_at: new Date().toISOString()
       })
       .eq('email', email)
 
     if (requestUpdateError) throw requestUpdateError
-
-    const nameFromRequest =
-      String(accessRequest.name || '').trim() || email.split('@')[0]
 
     const { error: profileUpsertError } = await supabase
       .from('profiles')
@@ -47,7 +43,7 @@ export default async (event) => {
           email,
           full_name: nameFromRequest,
           role: 'member',
-          status: 'pending'
+          status: 'rejected'
         },
         { onConflict: 'email' }
       )
@@ -56,10 +52,10 @@ export default async (event) => {
 
     return json({
       ok: true,
-      message: 'Bruger markeret som godkendt'
+      message: 'Bruger afvist'
     })
   } catch (error) {
-    console.error('admin-approve-user fejl:', error)
+    console.error('admin-reject-user fejl:', error)
 
     const code =
       error.message === 'Not authenticated'
@@ -69,7 +65,7 @@ export default async (event) => {
         : 500
 
     return json(
-      { error: error.message || 'Kunne ikke godkende bruger' },
+      { error: error.message || 'Kunne ikke afvise bruger' },
       code
     )
   }
