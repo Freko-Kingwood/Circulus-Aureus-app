@@ -32,6 +32,24 @@ export function parseBody(event) {
   }
 }
 
+export function getHeaderEmail(event) {
+  return String(
+    event?.headers?.['x-user-email'] ||
+    event?.headers?.['X-User-Email'] ||
+    ''
+  ).trim().toLowerCase()
+}
+
+export async function requireSignedIn(event) {
+  const email = getHeaderEmail(event)
+
+  if (!email) {
+    throw new Error('Not authenticated')
+  }
+
+  return email
+}
+
 export async function getProfileByEmail(email) {
   const { data, error } = await supabase
     .from('profiles')
@@ -44,24 +62,15 @@ export async function getProfileByEmail(email) {
 }
 
 export async function requireAdmin(event) {
-  const headerEmail = String(
-    event?.headers?.['x-user-email'] ||
-    event?.headers?.['X-User-Email'] ||
-    ''
-  ).trim().toLowerCase()
+  const email = await requireSignedIn(event)
+  const profile = await getProfileByEmail(email)
 
-  if (!headerEmail) {
-    throw new Error('Not authenticated')
-  }
-
-  const profile = await getProfileByEmail(headerEmail)
-
-  const isAdminByEnv = ADMIN_EMAILS.includes(headerEmail)
+  const isAdminByEnv = ADMIN_EMAILS.includes(email)
   const isAdminByProfile = profile?.role === 'admin'
 
   if (!isAdminByEnv && !isAdminByProfile) {
     throw new Error('Forbidden')
   }
 
-  return { email: headerEmail, profile }
+  return { email, profile }
 }
