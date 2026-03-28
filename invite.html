@@ -136,55 +136,78 @@
   </section>
 
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <script>
-    const netlifyIdentity = window.netlifyIdentity;
-    const form = document.getElementById('invite-form');
-    const status = document.getElementById('status');
+<script>
+  const form = document.getElementById('invite-form');
+  const status = document.getElementById('status');
 
-    function getInviteToken() {
-      const url = new URL(window.location.href);
-      const hashParams = new URLSearchParams((url.hash || '').replace(/^#/, ''));
-      return (
-        hashParams.get('invite_token') ||
-        url.searchParams.get('invite_token') ||
-        hashParams.get('token') ||
-        url.searchParams.get('token')
-      );
+  function getInviteToken() {
+    const url = new URL(window.location.href);
+    const hashParams = new URLSearchParams((url.hash || '').replace(/^#/, ''));
+    return (
+      hashParams.get('invite_token') ||
+      url.searchParams.get('invite_token') ||
+      hashParams.get('token') ||
+      url.searchParams.get('token')
+    );
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const token = getInviteToken();
+    const password = document.getElementById('password').value;
+    const password2 = document.getElementById('password2').value;
+
+    if (!token) {
+      status.textContent = 'Ingen invitationstoken fundet.';
+      return;
     }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    if (password.length < 8) {
+      status.textContent = 'Adgangskoden skal være mindst 8 tegn.';
+      return;
+    }
 
-      const token = getInviteToken();
-      const password = document.getElementById('password').value;
-      const password2 = document.getElementById('password2').value;
+    if (password !== password2) {
+      status.textContent = 'Adgangskoderne matcher ikke.';
+      return;
+    }
 
-      if (!token) {
-        status.textContent = 'Ingen invitationstoken fundet.';
-        return;
-      }
+    try {
+      status.textContent = 'Aktiverer konto...';
 
-      if (password.length < 8) {
-        status.textContent = 'Adgangskoden skal være mindst 8 tegn.';
-        return;
-      }
+      const res = await fetch('/.netlify/identity/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          token,
+          password,
+          type: 'signup'
+        })
+      });
 
-      if (password !== password2) {
-        status.textContent = 'Adgangskoderne matcher ikke.';
-        return;
-      }
-
+      const text = await res.text();
+      let data = {};
       try {
-        status.textContent = 'Aktiverer konto...';
-        await netlifyIdentity.gotrue.acceptInvite(token, password);
-        status.textContent = 'Konto aktiveret. Du bliver sendt til forsiden...';
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 1200);
-      } catch (err) {
-        status.textContent = err?.message || 'Kunne ikke aktivere konto.';
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { error: text || 'Ukendt fejl' };
       }
-    });
-  </script>
+
+      if (!res.ok) {
+        throw new Error(data?.msg || data?.error || 'Kunne ikke aktivere konto');
+      }
+
+      status.textContent = 'Konto aktiveret. Du bliver sendt til forsiden...';
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1200);
+    } catch (err) {
+      status.textContent = err?.message || 'Kunne ikke aktivere konto.';
+    }
+  });
+</script>
 </body>
 </html>
