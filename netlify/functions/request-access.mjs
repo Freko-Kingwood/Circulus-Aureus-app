@@ -1,6 +1,6 @@
 import { json, parseBody, supabase } from './_utils.mjs'
 
-export default async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return json({ error: 'Method not allowed' }, 405)
   }
@@ -30,11 +30,9 @@ export default async (event) => {
 
     if (error) throw error
 
-    return json({
-      ok: true,
-      message: 'Anmodning gemt'
-    })
+    return json({ ok: true, message: 'Anmodning gemt' })
   } catch (error) {
+    console.error('request-access fejl:', error)
     return json({ error: error.message || 'Kunne ikke gemme anmodning' }, 500)
   }
 }
