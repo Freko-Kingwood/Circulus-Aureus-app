@@ -1,34 +1,40 @@
-import { getStores, json, setJSON } from './_utils.mjs'
+import { json, parseBody, supabase } from './_utils.mjs'
 
-export const handler = async (event) => {
+export default async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return json({ error: 'Method not allowed' }, 405)
+  }
+
   try {
-    const body = JSON.parse(event.body || '{}')
+    const body = parseBody(event)
 
-    const email = String(body.email || '').trim().toLowerCase()
     const name = String(body.name || '').trim()
+    const email = String(body.email || '').trim().toLowerCase()
     const note = String(body.note || '').trim()
 
     if (!name || !email) {
-      return json(400, { error: 'Navn og e-mail er påkrævet' })
+      return json({ error: 'Navn og e-mail er påkrævet' }, 400)
     }
 
-    const stores = getStores(event)
+    const { error } = await supabase
+      .from('access_requests')
+      .upsert(
+        {
+          name,
+          email,
+          note,
+          status: 'pending'
+        },
+        { onConflict: 'email' }
+      )
 
-    await setJSON(stores.approvals, email, {
-      name,
-      email,
-      note,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    })
+    if (error) throw error
 
-    return json(200, {
+    return json({
       ok: true,
       message: 'Anmodning gemt'
     })
   } catch (error) {
-    return json(500, {
-      error: error?.message || 'Request-access fejlede'
-    })
+    return json({ error: error.message || 'Kunne ikke gemme anmodning' }, 500)
   }
 }
