@@ -68,8 +68,32 @@ function isAdminEmail(email) {
 }
 
 function getInviteToken() {
+  const url = new URL(window.location.href)
+
+  const fromQuery =
+    url.searchParams.get('invite_token') ||
+    url.searchParams.get('confirmation_token') ||
+    url.searchParams.get('token')
+
+  if (fromQuery) return fromQuery
+
   const hash = window.location.hash || ''
-  return new URLSearchParams(hash.replace(/^#/, '')).get('invite_token')
+  const hashParams = new URLSearchParams(hash.replace(/^#/, ''))
+
+  return (
+    hashParams.get('invite_token') ||
+    hashParams.get('confirmation_token') ||
+    hashParams.get('token')
+  )
+}
+
+function clearInviteTokenFromUrl() {
+  const url = new URL(window.location.href)
+  url.hash = ''
+  url.searchParams.delete('invite_token')
+  url.searchParams.delete('confirmation_token')
+  url.searchParams.delete('token')
+  window.history.replaceState({}, document.title, url.pathname + url.search)
 }
 
 async function getAccessToken() {
@@ -358,17 +382,28 @@ inviteForm?.addEventListener('submit', async (e) => {
     return
   }
 
-  try {
-    const user = await netlifyIdentity.acceptInvite(token, password, true)
-    showAuthenticated(user)
+  if (!netlifyIdentity?.gotrue) {
+    showToast('Identity-klienten er ikke klar')
+    return
+  }
 
-    if (window.location.hash) {
-      history.replaceState({}, document.title, window.location.pathname)
+  try {
+    await netlifyIdentity.gotrue.acceptInvite(token, password)
+
+    const user = netlifyIdentity.currentUser()
+
+    if (user) {
+      showAuthenticated(user)
+      clearInviteTokenFromUrl()
+      showToast('Konto aktiveret')
+      activateView('dashboard')
+      await loadData()
+      return
     }
 
-    showToast('Konto aktiveret')
-    activateView('dashboard')
-    await loadData()
+    clearInviteTokenFromUrl()
+    showToast('Konto aktiveret — log ind nu')
+    showLoggedOut('Konto aktiveret — log ind')
   } catch (error) {
     console.error('acceptInvite fejl:', error)
     showToast(error?.message || 'Kunne ikke aktivere konto')
@@ -422,6 +457,16 @@ document.addEventListener('click', async (e) => {
 
 if (netlifyIdentity) {
   netlifyIdentity.on('init', async (user) => {
+    const inviteToken = getInviteToken()
+
+    if (inviteToken) {
+      showLoggedOut('Invitation fundet — vælg adgangskode')
+      inviteBox.classList.remove('hidden')
+      if (loginBox) loginBox.classList.add('hidden')
+      if (requestBox) requestBox.classList.add('hidden')
+      return
+    }
+
     if (user) {
       showAuthenticated(user)
       activateView('dashboard')
@@ -450,10 +495,10 @@ if (netlifyIdentity) {
 }
 
 async function boot() {
-  const hash = window.location.hash || ''
-
   try {
-    if (hash.includes('invite_token')) {
+    const inviteToken = getInviteToken()
+
+    if (inviteToken) {
       showLoggedOut('Invitation fundet — vælg adgangskode')
       inviteBox.classList.remove('hidden')
       if (loginBox) loginBox.classList.add('hidden')
