@@ -128,11 +128,8 @@ async function fetchJSON(url, options = {}) {
     headers['Content-Type'] = 'application/json'
   }
 
-  const token = await getAccessToken()
-  console.log('Function token findes:', !!token)
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`
+  if (currentUser?.email) {
+    headers['x-user-email'] = currentUser.email
   }
 
   const response = await fetch(url, {
