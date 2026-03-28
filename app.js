@@ -1,4 +1,6 @@
-import { getUser, handleAuthCallback, login, logout, acceptInvite } from '@netlify/identity'
+import netlifyIdentity from 'netlify-identity-widget'
+
+netlifyIdentity.init()
 
 const authShell = document.getElementById('auth-shell')
 const appShell = document.getElementById('app-shell')
@@ -69,10 +71,6 @@ function getInviteToken() {
 
 async function getAccessToken() {
   if (!currentUser) return null
-
-  if (currentUser.token?.access_token) {
-    return currentUser.token.access_token
-  }
 
   if (typeof currentUser.jwt === 'function') {
     try {
@@ -298,7 +296,7 @@ document.getElementById('open-request')?.addEventListener('click', () => {
 
 document.getElementById('logout-btn')?.addEventListener('click', async () => {
   try {
-    await logout()
+    await netlifyIdentity.logout()
   } catch {}
   currentUser = null
   showLoggedOut()
@@ -324,7 +322,7 @@ loginForm?.addEventListener('submit', async (e) => {
   const password = String(fd.get('password') || '')
 
   try {
-    const user = await login(email, password)
+    const user = await netlifyIdentity.login(email, password, true)
     showAuthenticated(user)
     loginBox.classList.add('hidden')
     activateView('dashboard')
@@ -382,7 +380,7 @@ inviteForm?.addEventListener('submit', async (e) => {
   }
 
   try {
-    const user = await acceptInvite(token, password)
+    const user = await netlifyIdentity.acceptInvite(token, password, true)
     showAuthenticated(user)
 
     if (window.location.hash) {
@@ -458,12 +456,12 @@ async function boot() {
     let callbackResult = null
 
     try {
-      callbackResult = await handleAuthCallback()
+      callbackResult = await netlifyIdentity.completeUrlTokenFlow()
     } catch (error) {
-      console.error('handleAuthCallback fejl:', error)
+      console.error('completeUrlTokenFlow fejl:', error)
     }
 
-    const user = callbackResult?.user || await getUser()
+    const user = callbackResult?.user || netlifyIdentity.currentUser()
 
     if (user) {
       showAuthenticated(user)
