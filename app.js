@@ -6,6 +6,17 @@ if (!netlifyIdentity) {
   netlifyIdentity.init()
 }
 
+if (!window.supabase) {
+  console.error('Supabase script blev ikke loadet')
+}
+
+const SUPABASE_URL = 'https://ejzlncnxtlbboqpetuce.supabase.co'
+const SUPABASE_ANON_KEY = 'DIN_sb_publishable_KEY_HER'
+
+const supabase = window.supabase?.createClient
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null
+
 const authShell = document.getElementById('auth-shell')
 const appShell = document.getElementById('app-shell')
 const identityStatus = document.getElementById('identity-status')
@@ -35,9 +46,8 @@ const approvalList = document.getElementById('approval-list')
 const profileAdminLinkWrap = document.getElementById('profile-admin-link-wrap')
 const openAdminFromProfile = document.getElementById('open-admin-from-profile')
 
-const adminEmails = ['frekopetersen1998@gmail.com']
-
 let currentUser = null
+let currentProfile = null
 let currentData = {
   events: [],
   members: [],
@@ -52,7 +62,7 @@ function showToast(message) {
   toast.style.right = '16px'
   toast.style.bottom = '96px'
   toast.style.zIndex = '9999'
-  toast.style.maxWidth = '340px'
+  toast.style.maxWidth = '360px'
   toast.style.padding = '12px 16px'
   toast.style.borderRadius = '14px'
   toast.style.background = 'rgba(37, 9, 17, 0.96)'
@@ -60,11 +70,7 @@ function showToast(message) {
   toast.style.color = '#fff'
   toast.style.boxShadow = '0 14px 30px rgba(0,0,0,.28)'
   document.body.appendChild(toast)
-  setTimeout(() => toast.remove(), 3600)
-}
-
-function isAdminEmail(email) {
-  return adminEmails.includes((email || '').toLowerCase())
+  setTimeout(() => toast.remove(), 3800)
 }
 
 function getInviteToken() {
@@ -93,7 +99,7 @@ function clearInviteTokenFromUrl() {
   url.searchParams.delete('invite_token')
   url.searchParams.delete('confirmation_token')
   url.searchParams.delete('token')
-  window.history.replaceState({}, document.title, url.pathname + url.search)
+  history.replaceState({}, document.title, url.pathname + url.search)
 }
 
 async function getAccessToken() {
@@ -143,37 +149,6 @@ async function fetchJSON(url, options = {}) {
   return data
 }
 
-function showAuthenticated(user) {
-  currentUser = user
-
-  const email = user?.email || ''
-  const shortName = email.split('@')[0] || 'Medlem'
-  const admin = isAdminEmail(email)
-
-  authShell.classList.add('hidden')
-  appShell.classList.remove('hidden')
-
-  identityStatus.textContent = 'Godkendt adgang'
-  rolePill.textContent = admin ? 'Admin' : 'Medlem'
-  profileRole.textContent = admin ? 'Admin' : 'Medlem'
-  profileName.textContent = shortName
-  profileEmail.textContent = email
-
-  if (profileAdminLinkWrap) {
-    profileAdminLinkWrap.classList.toggle('hidden', !admin)
-  }
-}
-
-function showLoggedOut(status = 'Afventer login') {
-  authShell.classList.remove('hidden')
-  appShell.classList.add('hidden')
-  identityStatus.textContent = status
-
-  if (loginBox) loginBox.classList.add('hidden')
-  if (requestBox) requestBox.classList.add('hidden')
-  if (inviteBox) inviteBox.classList.add('hidden')
-}
-
 function activateView(viewName) {
   const titles = {
     dashboard: 'Dashboard',
@@ -198,90 +173,154 @@ function activateView(viewName) {
   if (viewEl) viewEl.classList.add('active')
   if (btnEl) btnEl.classList.add('active')
 
-  pageTitle.textContent = titles[viewName] || 'Dashboard'
+  if (pageTitle) {
+    pageTitle.textContent = titles[viewName] || 'Dashboard'
+  }
+}
+
+function showLoggedOut(status = 'Afventer login') {
+  authShell?.classList.remove('hidden')
+  appShell?.classList.add('hidden')
+
+  if (identityStatus) {
+    identityStatus.textContent = status
+  }
+
+  loginBox?.classList.add('hidden')
+  requestBox?.classList.add('hidden')
+  inviteBox?.classList.add('hidden')
+
+  currentUser = null
+  currentProfile = null
+}
+
+function showAuthenticated(user) {
+  currentUser = user
+
+  const email = user?.email || ''
+  const fallbackName = email.split('@')[0] || 'Medlem'
+  const role = currentProfile?.role || 'member'
+  const fullName = currentProfile?.full_name || fallbackName
+
+  authShell?.classList.add('hidden')
+  appShell?.classList.remove('hidden')
+
+  if (identityStatus) identityStatus.textContent = 'Godkendt adgang'
+  if (rolePill) rolePill.textContent = role === 'admin' ? 'Admin' : 'Medlem'
+  if (profileRole) profileRole.textContent = role === 'admin' ? 'Admin' : 'Medlem'
+  if (profileName) profileName.textContent = fullName
+  if (profileEmail) profileEmail.textContent = email
+
+  if (profileAdminLinkWrap) {
+    profileAdminLinkWrap.classList.toggle('hidden', role !== 'admin')
+  }
+}
+
+async function loadProfile(email) {
+  if (!supabase || !email) return null
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('email', email.toLowerCase())
+    .maybeSingle()
+
+  if (error) {
+    console.error('loadProfile fejl:', error)
+    return null
+  }
+
+  return data
 }
 
 function renderStats() {
-  statEvents.textContent = currentData.events.length
-  statMembers.textContent = currentData.members.length
-  statMessages.textContent = currentData.messages.length
+  if (statEvents) statEvents.textContent = String(currentData.events.length)
+  if (statMembers) statMembers.textContent = String(currentData.members.length)
+  if (statMessages) statMessages.textContent = String(currentData.messages.length)
 }
 
 function renderEvents() {
+  if (!eventList) return
+
   if (!currentData.events.length) {
     eventList.innerHTML = '<div class="item"><p class="muted">Ingen begivenheder endnu.</p></div>'
     return
   }
 
-  eventList.innerHTML = currentData.events
-    .map((event) => `
-      <article class="item">
-        <p class="eyebrow">${event.datetime || event.date || ''}</p>
-        <h3>${event.title || 'Uden titel'}</h3>
-        <p class="muted">${event.location || ''}</p>
-        <p class="muted">${event.description || ''}</p>
-      </article>
-    `)
-    .join('')
+  eventList.innerHTML = currentData.events.map((event) => `
+    <article class="item">
+      <p class="eyebrow">${event.starts_at || ''}</p>
+      <h3>${event.title || 'Uden titel'}</h3>
+      <p class="muted">${event.location || ''}</p>
+      <p class="muted">${event.description || ''}</p>
+    </article>
+  `).join('')
 }
 
 function renderMembers() {
+  if (!memberList) return
+
   if (!currentData.members.length) {
     memberList.innerHTML = '<div class="item"><p class="muted">Ingen medlemmer endnu.</p></div>'
     return
   }
 
-  memberList.innerHTML = currentData.members
-    .map((member) => `
-      <article class="item">
-        <h3>${member.name || 'Ukendt medlem'}</h3>
-        <p class="muted">${member.email || ''}</p>
-        <p class="muted">${member.since ? `Medlem siden ${member.since}` : ''}</p>
-      </article>
-    `)
-    .join('')
+  memberList.innerHTML = currentData.members.map((member) => `
+    <article class="item">
+      <h3>${member.full_name || member.email || 'Ukendt medlem'}</h3>
+      <p class="muted">${member.email || ''}</p>
+      <p class="muted">Rolle: ${member.role || 'member'}</p>
+      <p class="muted">Status: ${member.status || 'active'}</p>
+    </article>
+  `).join('')
 }
 
 function renderMessages() {
+  if (!messageList) return
+
   if (!currentData.messages.length) {
     messageList.innerHTML = '<div class="item"><p class="muted">Ingen beskeder endnu.</p></div>'
     return
   }
 
-  messageList.innerHTML = currentData.messages
-    .map((message) => `
-      <article class="item">
-        <p class="eyebrow">${message.createdAt || ''}</p>
-        <h3>${message.title || 'Besked'}</h3>
-        <p class="muted">${message.text || message.body || ''}</p>
-      </article>
-    `)
-    .join('')
+  messageList.innerHTML = currentData.messages.map((message) => `
+    <article class="item">
+      <p class="eyebrow">${message.created_at || ''}</p>
+      <h3>${message.title || 'Besked'}</h3>
+      <p class="muted">${message.body || ''}</p>
+    </article>
+  `).join('')
 }
 
 function renderApprovals() {
-  const pending = (currentData.approvals || []).filter((item) => item.status !== 'invited')
+  if (!approvalList) return
+
+  const role = currentProfile?.role || 'member'
+  if (role !== 'admin') {
+    approvalList.innerHTML = '<div class="item"><p class="muted">Kun admin kan se godkendelser.</p></div>'
+    return
+  }
+
+  const pending = currentData.approvals.filter((item) => item.status === 'pending')
 
   if (!pending.length) {
     approvalList.innerHTML = '<div class="item"><p class="muted">Ingen afventende godkendelser.</p></div>'
     return
   }
 
-  approvalList.innerHTML = pending
-    .map((item) => `
-      <article class="item">
-        <p class="eyebrow">Afventende godkendelse</p>
-        <h3>${item.name || 'Ukendt navn'}</h3>
-        <p class="muted">${item.email || ''}</p>
-        <p class="muted">${item.note || ''}</p>
-        <div class="item-actions">
-          <button type="button" data-approve-email="${item.email}">Markér som inviteret</button>
-          <button type="button" data-copy-email="${item.email}">Kopiér e-mail</button>
-          <button class="btn-danger" type="button" data-reject-email="${item.email}">Afvis</button>
-        </div>
-      </article>
-    `)
-    .join('')
+  approvalList.innerHTML = pending.map((item) => `
+    <article class="item">
+      <p class="eyebrow">Afventende godkendelse</p>
+      <h3>${item.name || 'Ukendt navn'}</h3>
+      <p class="muted">${item.email || ''}</p>
+      <p class="muted">${item.note || ''}</p>
+      <div class="item-actions">
+        <button type="button" data-approve-email="${item.email}">Markér som inviteret</button>
+        <button type="button" data-copy-email="${item.email}">Kopiér e-mail</button>
+        <button type="button" data-reject-email="${item.email}">Afvis</button>
+      </div>
+    </article>
+  `).join('')
 }
 
 function renderAll() {
@@ -293,13 +332,47 @@ function renderAll() {
 }
 
 async function loadData() {
+  if (!supabase) {
+    showToast('Supabase er ikke initialiseret')
+    return
+  }
+
   try {
-    currentData = await fetchJSON('/.netlify/functions/list-data')
+    const [
+      eventsRes,
+      membersRes,
+      messagesRes,
+      approvalsRes
+    ] = await Promise.all([
+      supabase.from('events').select('*').order('starts_at', { ascending: true }),
+      supabase.from('profiles').select('*').order('created_at', { ascending: true }),
+      supabase.from('messages').select('*').order('created_at', { ascending: false }),
+      supabase.from('access_requests').select('*').order('created_at', { ascending: false })
+    ])
+
+    if (eventsRes.error) throw eventsRes.error
+    if (membersRes.error) throw membersRes.error
+    if (messagesRes.error) throw messagesRes.error
+    if (approvalsRes.error) throw approvalsRes.error
+
+    currentData = {
+      events: eventsRes.data || [],
+      members: membersRes.data || [],
+      messages: messagesRes.data || [],
+      approvals: approvalsRes.data || []
+    }
+
     renderAll()
   } catch (error) {
-    console.error('list-data fejl:', error)
+    console.error('loadData fejl:', error)
     showToast(error.message || 'Kunne ikke hente data')
   }
+}
+
+async function testDB() {
+  if (!supabase) return
+  const { data, error } = await supabase.from('profiles').select('*')
+  console.log('TEST:', data, error)
 }
 
 document.getElementById('open-login')?.addEventListener('click', () => {
@@ -312,49 +385,71 @@ document.getElementById('open-login')?.addEventListener('click', () => {
 })
 
 document.getElementById('open-request')?.addEventListener('click', () => {
-  requestBox.classList.toggle('hidden')
-  if (loginBox) loginBox.classList.add('hidden')
-  if (inviteBox) inviteBox.classList.add('hidden')
+  requestBox?.classList.toggle('hidden')
+  loginBox?.classList.add('hidden')
+  inviteBox?.classList.add('hidden')
 })
 
 document.getElementById('logout-btn')?.addEventListener('click', async () => {
   try {
     await netlifyIdentity.logout()
   } catch {}
-  currentUser = null
   showLoggedOut()
 })
 
 openAdminFromProfile?.addEventListener('click', () => {
-  if (isAdminEmail(currentUser?.email || '')) {
+  if (currentProfile?.role === 'admin') {
     activateView('admin')
   }
 })
 
 document.querySelectorAll('.nav-item[data-view]').forEach((btn) => {
   btn.addEventListener('click', () => {
-    activateView(btn.dataset.view)
+    const view = btn.dataset.view
+    if (view === 'admin' && currentProfile?.role !== 'admin') {
+      showToast('Kun admin har adgang')
+      return
+    }
+    activateView(view)
   })
 })
 
 requestAccessForm?.addEventListener('submit', async (e) => {
   e.preventDefault()
 
+  if (!supabase) {
+    showToast('Supabase er ikke klar')
+    return
+  }
+
   const form = new FormData(e.target)
-  const payload = Object.fromEntries(form)
+  const name = String(form.get('name') || '').trim()
+  const email = String(form.get('email') || '').trim().toLowerCase()
+  const note = String(form.get('note') || '').trim()
+
+  if (!name || !email) {
+    showToast('Navn og e-mail er påkrævet')
+    return
+  }
 
   try {
-    const result = await fetchJSON('/.netlify/functions/request-access', {
-      method: 'POST',
-      body: JSON.stringify(payload)
+    const { error } = await supabase.from('access_requests').upsert({
+      name,
+      email,
+      note,
+      status: 'pending'
+    }, {
+      onConflict: 'email'
     })
 
+    if (error) throw error
+
     e.target.reset()
-    requestBox.classList.add('hidden')
-    showToast(result?.message || 'Din anmodning er sendt')
+    requestBox?.classList.add('hidden')
+    showToast('Din anmodning er sendt')
   } catch (error) {
     console.error('request-access fejl:', error)
-    showToast(error?.message || 'Kunne ikke sende anmodning')
+    showToast(error.message || 'Kunne ikke sende anmodning')
   }
 })
 
@@ -368,7 +463,7 @@ inviteForm?.addEventListener('submit', async (e) => {
 
   if (!token) {
     showToast('Intet invite-token fundet')
-    identityStatus.textContent = 'Invite-fejl: Intet invite-token fundet'
+    if (identityStatus) identityStatus.textContent = 'Invite-fejl: Intet invite-token fundet'
     return
   }
 
@@ -392,22 +487,25 @@ inviteForm?.addEventListener('submit', async (e) => {
 
     const user = netlifyIdentity.currentUser()
 
+    clearInviteTokenFromUrl()
+
     if (user) {
+      currentProfile = await loadProfile(user.email)
       showAuthenticated(user)
-      clearInviteTokenFromUrl()
-      showToast('Konto aktiveret')
       activateView('dashboard')
       await loadData()
+      showToast('Konto aktiveret')
       return
     }
 
-    clearInviteTokenFromUrl()
-    showToast('Konto aktiveret — log ind nu')
     showLoggedOut('Konto aktiveret — log ind')
+    showToast('Konto aktiveret — log ind nu')
   } catch (error) {
     console.error('acceptInvite fejl:', error)
-    showToast(error?.message || 'Kunne ikke aktivere konto')
-    identityStatus.textContent = `Invite-fejl: ${error?.message || 'ukendt fejl'}`
+    showToast(error.message || 'Kunne ikke aktivere konto')
+    if (identityStatus) {
+      identityStatus.textContent = `Invite-fejl: ${error.message || 'ukendt fejl'}`
+    }
   }
 })
 
@@ -423,7 +521,7 @@ document.addEventListener('click', async (e) => {
       await loadData()
     } catch (error) {
       console.error('approve fejl:', error)
-      showToast(error?.message || 'Kunne ikke godkende')
+      showToast(error.message || 'Kunne ikke godkende')
     }
     return
   }
@@ -439,7 +537,7 @@ document.addEventListener('click', async (e) => {
       await loadData()
     } catch (error) {
       console.error('reject fejl:', error)
-      showToast(error?.message || 'Kunne ikke afvise')
+      showToast(error.message || 'Kunne ikke afvise')
     }
     return
   }
@@ -461,13 +559,14 @@ if (netlifyIdentity) {
 
     if (inviteToken) {
       showLoggedOut('Invitation fundet — vælg adgangskode')
-      inviteBox.classList.remove('hidden')
-      if (loginBox) loginBox.classList.add('hidden')
-      if (requestBox) requestBox.classList.add('hidden')
+      inviteBox?.classList.remove('hidden')
+      loginBox?.classList.add('hidden')
+      requestBox?.classList.add('hidden')
       return
     }
 
     if (user) {
+      currentProfile = await loadProfile(user.email)
       showAuthenticated(user)
       activateView('dashboard')
       await loadData()
@@ -478,13 +577,13 @@ if (netlifyIdentity) {
 
   netlifyIdentity.on('login', async (user) => {
     netlifyIdentity.close()
+    currentProfile = await loadProfile(user.email)
     showAuthenticated(user)
     activateView('dashboard')
     await loadData()
   })
 
   netlifyIdentity.on('logout', () => {
-    currentUser = null
     showLoggedOut()
   })
 
@@ -496,19 +595,22 @@ if (netlifyIdentity) {
 
 async function boot() {
   try {
+    testDB()
+
     const inviteToken = getInviteToken()
 
     if (inviteToken) {
       showLoggedOut('Invitation fundet — vælg adgangskode')
-      inviteBox.classList.remove('hidden')
-      if (loginBox) loginBox.classList.add('hidden')
-      if (requestBox) requestBox.classList.add('hidden')
+      inviteBox?.classList.remove('hidden')
+      loginBox?.classList.add('hidden')
+      requestBox?.classList.add('hidden')
       return
     }
 
     const user = netlifyIdentity?.currentUser?.()
 
     if (user) {
+      currentProfile = await loadProfile(user.email)
       showAuthenticated(user)
       activateView('dashboard')
       await loadData()
