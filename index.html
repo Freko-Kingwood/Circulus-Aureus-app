@@ -537,6 +537,50 @@
       <button class="nav-item" data-view="profile" type="button">Profil</button>
     </nav>
   </div>
+<div id="profile-editor-modal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" data-close-profile-editor="true"></div>
+
+  <div class="modal-panel glass card">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Admin redigering</p>
+        <h3 class="card-title">Redigér profil</h3>
+      </div>
+      <button type="button" class="icon-btn" id="close-profile-editor">✕</button>
+    </div>
+
+    <form id="profile-editor-form" class="stack">
+      <input type="hidden" id="editor-email" name="email" />
+
+      <label class="field">
+        <span>Navn</span>
+        <input id="editor-full-name" name="full_name" type="text" required />
+      </label>
+
+      <label class="field">
+        <span>Rolle</span>
+        <select id="editor-role" name="role" required>
+          <option value="member">Broder</option>
+          <option value="admin">Bestyrelse</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Status</span>
+        <select id="editor-status" name="status" required>
+          <option value="pending">Afventer</option>
+          <option value="active">Aktiv</option>
+          <option value="rejected">Afvist</option>
+        </select>
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-profile-editor">Annuller</button>
+        <button type="submit" class="btn btn-primary">Gem ændringer</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
