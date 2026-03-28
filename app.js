@@ -129,8 +129,10 @@ async function fetchJSON(url, options = {}) {
   }
 
   const token = await getAccessToken()
+  console.log('Function token findes:', !!token)
+
   if (token) {
-    headers.authorization = `Bearer ${token}`
+    headers.Authorization = `Bearer ${token}`
   }
 
   const response = await fetch(url, {
@@ -140,11 +142,11 @@ async function fetchJSON(url, options = {}) {
 
   const rawText = await response.text()
 
-  let data = null
+  let data = {}
   try {
     data = rawText ? JSON.parse(rawText) : {}
   } catch {
-    data = { error: rawText || 'Ukendt fejl' }
+    throw new Error(rawText || `HTTP ${response.status}`)
   }
 
   if (!response.ok) {
