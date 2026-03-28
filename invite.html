@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aktivér konto · Circulus Aureus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --bg: #16050b;
+      --panel: rgba(60, 13, 28, 0.82);
+      --panel-2: rgba(78, 18, 36, 0.92);
+      --gold: #d7b46a;
+      --text: #f8efe4;
+      --muted: #d7cabf;
+      --line: rgba(215, 180, 106, 0.16);
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-pill: 999px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(143, 34, 60, 0.22), transparent 36%),
+        linear-gradient(180deg, #16050b 0%, #0d0206 100%);
+      color: var(--text);
+      font-family: Inter, system-ui, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px 18px;
+    }
+
+    .card {
+      width: min(100%, 680px);
+      border-radius: 40px;
+      padding: 34px 22px 28px;
+      text-align: center;
+      background: linear-gradient(180deg, var(--panel-2), var(--panel));
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow), inset 0 0 28px rgba(215, 180, 106, 0.06);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--gold);
+      font-family: Cinzel, serif;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 14px;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-family: Cinzel, serif;
+      font-size: clamp(34px, 8vw, 58px);
+      line-height: 1.08;
+    }
+
+    .lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 18px;
+    }
+
+    form {
+      display: grid;
+      gap: 14px;
+      text-align: left;
+      margin-top: 10px;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #d7cabf;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      border-radius: var(--radius-pill);
+      padding: 16px 30px;
+      font-family: Cinzel, serif;
+      font-size: 18px;
+      background: var(--gold);
+      color: #2a1809;
+      margin-top: 4px;
+    }
+
+    .status {
+      margin-top: 18px;
+      color: var(--muted);
+      line-height: 1.5;
+      min-height: 28px;
+    }
+  </style>
+</head>
+<body>
+  <section class="card">
+    <p class="eyebrow">Circulus Aureus</p>
+    <h1>Opret adgangskode</h1>
+    <p class="lead">Din invitation er fundet. Vælg nu en adgangskode for at aktivere din konto.</p>
+
+    <form id="invite-form">
+      <input id="password" type="password" placeholder="Vælg adgangskode" required />
+      <input id="password2" type="password" placeholder="Gentag adgangskode" required />
+      <button type="submit">Aktivér konto</button>
+    </form>
+
+    <div id="status" class="status"></div>
+  </section>
+
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    const netlifyIdentity = window.netlifyIdentity;
+    const form = document.getElementById('invite-form');
+    const status = document.getElementById('status');
+
+    function getInviteToken() {
+      const url = new URL(window.location.href);
+      const hashParams = new URLSearchParams((url.hash || '').replace(/^#/, ''));
+      return (
+        hashParams.get('invite_token') ||
+        url.searchParams.get('invite_token') ||
+        hashParams.get('token') ||
+        url.searchParams.get('token')
+      );
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const token = getInviteToken();
+      const password = document.getElementById('password').value;
+      const password2 = document.getElementById('password2').value;
+
+      if (!token) {
+        status.textContent = 'Ingen invitationstoken fundet.';
+        return;
+      }
+
+      if (password.length < 8) {
+        status.textContent = 'Adgangskoden skal være mindst 8 tegn.';
+        return;
+      }
+
+      if (password !== password2) {
+        status.textContent = 'Adgangskoderne matcher ikke.';
+        return;
+      }
+
+      try {
+        status.textContent = 'Aktiverer konto...';
+        await netlifyIdentity.gotrue.acceptInvite(token, password);
+        status.textContent = 'Konto aktiveret. Du bliver sendt til forsiden...';
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1200);
+      } catch (err) {
+        status.textContent = err?.message || 'Kunne ikke aktivere konto.';
+      }
+    });
+  </script>
+</body>
+</html>
