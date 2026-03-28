@@ -15,7 +15,19 @@ export default async (event) => {
       return json({ error: 'E-mail mangler' }, 400)
     }
 
-    const { error: requestError } = await supabase
+    const { data: accessRequest, error: requestReadError } = await supabase
+      .from('access_requests')
+      .select('*')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (requestReadError) throw requestReadError
+
+    if (!accessRequest) {
+      return json({ error: 'Anmodning ikke fundet' }, 404)
+    }
+
+    const { error: requestUpdateError } = await supabase
       .from('access_requests')
       .update({
         status: 'approved',
@@ -23,42 +35,42 @@ export default async (event) => {
       })
       .eq('email', email)
 
-    if (requestError) throw requestError
+    if (requestUpdateError) throw requestUpdateError
 
-    const { data: existingProfile, error: profileReadError } = await supabase
+    const nameFromRequest =
+      String(accessRequest.name || '').trim() || email.split('@')[0]
+
+    const { error: profileUpsertError } = await supabase
       .from('profiles')
-      .select('*')
-      .eq('email', email)
-      .maybeSingle()
-
-    if (profileReadError) throw profileReadError
-
-    const payload = existingProfile
-      ? {
+      .upsert(
+        {
           email,
-          full_name: existingProfile.full_name || email.split('@')[0],
-          role: existingProfile.role || 'member',
-          status: 'pending'
-        }
-      : {
-          email,
-          full_name: email.split('@')[0],
+          full_name: nameFromRequest,
           role: 'member',
           status: 'pending'
-        }
+        },
+        { onConflict: 'email' }
+      )
 
-    const { error: profileWriteError } = await supabase
-      .from('profiles')
-      .upsert(payload, { onConflict: 'email' })
-
-    if (profileWriteError) throw profileWriteError
+    if (profileUpsertError) throw profileUpsertError
 
     return json({
       ok: true,
       message: 'Bruger markeret som godkendt'
     })
   } catch (error) {
-    const code = error.message === 'Not authenticated' ? 401 : error.message === 'Forbidden' ? 403 : 500
-    return json({ error: error.message || 'Kunne ikke godkende bruger' }, code)
+    console.error('admin-approve-user fejl:', error)
+
+    const code =
+      error.message === 'Not authenticated'
+        ? 401
+        : error.message === 'Forbidden'
+        ? 403
+        : 500
+
+    return json(
+      { error: error.message || 'Kunne ikke godkende bruger' },
+      code
+    )
   }
 }
