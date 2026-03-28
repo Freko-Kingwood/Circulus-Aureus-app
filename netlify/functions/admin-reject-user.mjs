@@ -15,7 +15,18 @@ export default async (event) => {
       return json({ error: 'E-mail mangler' }, 400)
     }
 
-    const { error: requestError } = await supabase
+    const { data: accessRequest, error: requestReadError } = await supabase
+      .from('access_requests')
+      .select('*')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (requestReadError) throw requestReadError
+
+    const nameFromRequest =
+      String(accessRequest?.name || '').trim() || email.split('@')[0]
+
+    const { error: requestUpdateError } = await supabase
       .from('access_requests')
       .update({
         status: 'rejected',
@@ -23,28 +34,39 @@ export default async (event) => {
       })
       .eq('email', email)
 
-    if (requestError) throw requestError
+    if (requestUpdateError) throw requestUpdateError
 
-    const { error: profileError } = await supabase
+    const { error: profileUpsertError } = await supabase
       .from('profiles')
       .upsert(
         {
           email,
-          full_name: email.split('@')[0],
+          full_name: nameFromRequest,
           role: 'member',
           status: 'rejected'
         },
         { onConflict: 'email' }
       )
 
-    if (profileError) throw profileError
+    if (profileUpsertError) throw profileUpsertError
 
     return json({
       ok: true,
       message: 'Bruger afvist'
     })
   } catch (error) {
-    const code = error.message === 'Not authenticated' ? 401 : error.message === 'Forbidden' ? 403 : 500
-    return json({ error: error.message || 'Kunne ikke afvise bruger' }, code)
+    console.error('admin-reject-user fejl:', error)
+
+    const code =
+      error.message === 'Not authenticated'
+        ? 401
+        : error.message === 'Forbidden'
+        ? 403
+        : 500
+
+    return json(
+      { error: error.message || 'Kunne ikke afvise bruger' },
+      code
+    )
   }
 }
