@@ -102,25 +102,6 @@ function clearInviteTokenFromUrl() {
   history.replaceState({}, document.title, url.pathname + url.search)
 }
 
-async function getAccessToken() {
-  if (!currentUser) return null
-
-  try {
-    if (typeof currentUser.jwt === 'function') {
-      const token = await currentUser.jwt(true)
-      if (token) return token
-    }
-  } catch (error) {
-    console.error('jwt() fejl:', error)
-  }
-
-  if (currentUser.token?.access_token) {
-    return currentUser.token.access_token
-  }
-
-  return null
-}
-
 async function fetchJSON(url, options = {}) {
   const headers = { ...(options.headers || {}) }
 
@@ -153,32 +134,19 @@ async function fetchJSON(url, options = {}) {
   return data
 }
 
-function activateView(viewName) {
-  const titles = {
-    dashboard: 'Dashboard',
-    events: 'Begivenheder',
-    members: 'Medlemmer',
-    messages: 'Beskeder',
-    profile: 'Profil',
-    admin: 'Adminpanel'
-  }
+async function syncProfile() {
+  try {
+    const result = await fetchJSON('/.netlify/functions/sync-profile', {
+      method: 'POST',
+      body: JSON.stringify({})
+    })
 
-  document.querySelectorAll('.view').forEach((view) => {
-    view.classList.remove('active')
-  })
-
-  document.querySelectorAll('.nav-item').forEach((btn) => {
-    btn.classList.remove('active')
-  })
-
-  const viewEl = document.getElementById(`view-${viewName}`)
-  const btnEl = document.querySelector(`.nav-item[data-view="${viewName}"]`)
-
-  if (viewEl) viewEl.classList.add('active')
-  if (btnEl) btnEl.classList.add('active')
-
-  if (pageTitle) {
-    pageTitle.textContent = titles[viewName] || 'Dashboard'
+    currentProfile = result.profile || null
+    return currentProfile
+  } catch (error) {
+    console.error('syncProfile fejl:', error)
+    showToast(error.message || 'Kunne ikke synkronisere profil')
+    return null
   }
 }
 
@@ -186,9 +154,7 @@ function showLoggedOut(status = 'Afventer login') {
   authShell?.classList.remove('hidden')
   appShell?.classList.add('hidden')
 
-  if (identityStatus) {
-    identityStatus.textContent = status
-  }
+  if (identityStatus) identityStatus.textContent = status
 
   loginBox?.classList.add('hidden')
   requestBox?.classList.add('hidden')
@@ -220,21 +186,30 @@ function showAuthenticated(user) {
   }
 }
 
-async function loadProfile(email) {
-  if (!supabase || !email) return null
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('email', email.toLowerCase())
-    .maybeSingle()
-
-  if (error) {
-    console.error('loadProfile fejl:', error)
-    return null
+function activateView(viewName) {
+  const titles = {
+    dashboard: 'Dashboard',
+    events: 'Begivenheder',
+    members: 'Medlemmer',
+    messages: 'Beskeder',
+    profile: 'Profil',
+    admin: 'Adminpanel'
   }
 
-  return data
+  document.querySelectorAll('.view').forEach((view) => {
+    view.classList.remove('active')
+  })
+
+  document.querySelectorAll('.nav-item').forEach((btn) => {
+    btn.classList.remove('active')
+  })
+
+  const viewEl = document.getElementById(`view-${viewName}`)
+  const btnEl = document.querySelector(`.nav-item[data-view="${viewName}"]`)
+
+  if (viewEl) viewEl.classList.add('active')
+  if (btnEl) btnEl.classList.add('active')
+  if (pageTitle) pageTitle.textContent = titles[viewName] || 'Dashboard'
 }
 
 function renderStats() {
@@ -264,6 +239,8 @@ function renderEvents() {
 function renderMembers() {
   if (!memberList) return
 
+  const isAdmin = currentProfile?.role === 'admin'
+
   if (!currentData.members.length) {
     memberList.innerHTML = '<div class="item"><p class="muted">Ingen medlemmer endnu.</p></div>'
     return
@@ -275,6 +252,23 @@ function renderMembers() {
       <p class="muted">${member.email || ''}</p>
       <p class="muted">Rolle: ${member.role || 'member'}</p>
       <p class="muted">Status: ${member.status || 'active'}</p>
+      ${
+        isAdmin
+          ? `
+            <div class="item-actions">
+              <button
+                type="button"
+                data-edit-profile-email="${member.email}"
+                data-edit-profile-name="${member.full_name || ''}"
+                data-edit-profile-role="${member.role || 'member'}"
+                data-edit-profile-status="${member.status || 'active'}"
+              >
+                Redigér profil
+              </button>
+            </div>
+          `
+          : ''
+      }
     </article>
   `).join('')
 }
@@ -336,40 +330,52 @@ function renderAll() {
 }
 
 async function loadData() {
-  if (!supabase) {
-    showToast('Supabase er ikke initialiseret')
-    return
-  }
-
   try {
-    const [
-      eventsRes,
-      membersRes,
-      messagesRes,
-      approvalsRes
-    ] = await Promise.all([
-      supabase.from('events').select('*').order('starts_at', { ascending: true }),
-      supabase.from('profiles').select('*').order('created_at', { ascending: true }),
-      supabase.from('messages').select('*').order('created_at', { ascending: false }),
-      supabase.from('access_requests').select('*').order('created_at', { ascending: false })
-    ])
-
-    if (eventsRes.error) throw eventsRes.error
-    if (membersRes.error) throw membersRes.error
-    if (messagesRes.error) throw messagesRes.error
-    if (approvalsRes.error) throw approvalsRes.error
-
+    const data = await fetchJSON('/.netlify/functions/list-data')
     currentData = {
-      events: eventsRes.data || [],
-      members: membersRes.data || [],
-      messages: messagesRes.data || [],
-      approvals: approvalsRes.data || []
+      events: data.events || [],
+      members: data.members || [],
+      messages: data.messages || [],
+      approvals: data.approvals || []
+    }
+
+    if (data.me) {
+      currentProfile = data.me
     }
 
     renderAll()
   } catch (error) {
     console.error('loadData fejl:', error)
     showToast(error.message || 'Kunne ikke hente data')
+  }
+}
+
+async function openProfileEditor({ email, fullName, role, status }) {
+  const newName = window.prompt('Navn', fullName || '')
+  if (newName === null) return
+
+  const newRole = window.prompt('Rolle (admin/member)', role || 'member')
+  if (newRole === null) return
+
+  const newStatus = window.prompt('Status (pending/active/rejected)', status || 'active')
+  if (newStatus === null) return
+
+  try {
+    await fetchJSON('/.netlify/functions/admin-update-profile', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        full_name: newName,
+        role: newRole,
+        status: newStatus
+      })
+    })
+
+    showToast('Profil opdateret')
+    await loadData()
+  } catch (error) {
+    console.error('admin-update-profile fejl:', error)
+    showToast(error.message || 'Kunne ikke opdatere profil')
   }
 }
 
@@ -421,36 +427,18 @@ document.querySelectorAll('.nav-item[data-view]').forEach((btn) => {
 requestAccessForm?.addEventListener('submit', async (e) => {
   e.preventDefault()
 
-  if (!supabase) {
-    showToast('Supabase er ikke klar')
-    return
-  }
-
-  const form = new FormData(e.target)
-  const name = String(form.get('name') || '').trim()
-  const email = String(form.get('email') || '').trim().toLowerCase()
-  const note = String(form.get('note') || '').trim()
-
-  if (!name || !email) {
-    showToast('Navn og e-mail er påkrævet')
-    return
-  }
-
   try {
-    const { error } = await supabase.from('access_requests').upsert({
-      name,
-      email,
-      note,
-      status: 'pending'
-    }, {
-      onConflict: 'email'
-    })
+    const form = new FormData(e.target)
+    const payload = Object.fromEntries(form)
 
-    if (error) throw error
+    const result = await fetchJSON('/.netlify/functions/request-access', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
 
     e.target.reset()
     requestBox?.classList.add('hidden')
-    showToast('Din anmodning er sendt')
+    showToast(result?.message || 'Din anmodning er sendt')
   } catch (error) {
     console.error('request-access fejl:', error)
     showToast(error.message || 'Kunne ikke sende anmodning')
@@ -488,13 +476,13 @@ inviteForm?.addEventListener('submit', async (e) => {
 
   try {
     await netlifyIdentity.gotrue.acceptInvite(token, password)
+    clearInviteTokenFromUrl()
 
     const user = netlifyIdentity.currentUser()
 
-    clearInviteTokenFromUrl()
-
     if (user) {
-      currentProfile = await loadProfile(user.email)
+      currentUser = user
+      await syncProfile()
       showAuthenticated(user)
       activateView('dashboard')
       await loadData()
@@ -514,6 +502,17 @@ inviteForm?.addEventListener('submit', async (e) => {
 })
 
 document.addEventListener('click', async (e) => {
+  const editProfileBtn = e.target.closest('[data-edit-profile-email]')
+  if (editProfileBtn) {
+    await openProfileEditor({
+      email: editProfileBtn.dataset.editProfileEmail,
+      fullName: editProfileBtn.dataset.editProfileName,
+      role: editProfileBtn.dataset.editProfileRole,
+      status: editProfileBtn.dataset.editProfileStatus
+    })
+    return
+  }
+
   const approveBtn = e.target.closest('[data-approve-email]')
   if (approveBtn) {
     try {
@@ -570,7 +569,8 @@ if (netlifyIdentity) {
     }
 
     if (user) {
-      currentProfile = await loadProfile(user.email)
+      currentUser = user
+      await syncProfile()
       showAuthenticated(user)
       activateView('dashboard')
       await loadData()
@@ -581,7 +581,8 @@ if (netlifyIdentity) {
 
   netlifyIdentity.on('login', async (user) => {
     netlifyIdentity.close()
-    currentProfile = await loadProfile(user.email)
+    currentUser = user
+    await syncProfile()
     showAuthenticated(user)
     activateView('dashboard')
     await loadData()
@@ -614,7 +615,8 @@ async function boot() {
     const user = netlifyIdentity?.currentUser?.()
 
     if (user) {
-      currentProfile = await loadProfile(user.email)
+      currentUser = user
+      await syncProfile()
       showAuthenticated(user)
       activateView('dashboard')
       await loadData()
