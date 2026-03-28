@@ -1,10 +1,6 @@
 import { getUserFromEvent, getProfileByEmail, json, supabase } from './_utils.mjs'
 
-export default async () => {
-  return json({ error: 'Handler not mounted' }, 500)
-}
-
-export async function handler(event) {
+export const handler = async (event) => {
   try {
     const identityUser = getUserFromEvent(event)
     const email = identityUser?.email ? String(identityUser.email).toLowerCase() : null
@@ -33,6 +29,7 @@ export async function handler(event) {
       me: profile || null
     })
   } catch (error) {
+    console.error('list-data fejl:', error)
     return json({ error: error.message || 'Kunne ikke hente data' }, 500)
   }
 }
