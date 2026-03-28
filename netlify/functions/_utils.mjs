@@ -1,74 +1,70 @@
-import jwt from 'jsonwebtoken'
-import { connectLambda, getStore } from '@netlify/blobs'
+import { createClient } from '@supabase/supabase-js'
 
-export function json(statusCode, body) {
+const SUPABASE_URL = process.env.SUPABASE_URL
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!SUPABASE_URL) {
+  throw new Error('Missing SUPABASE_URL')
+}
+
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY')
+}
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false }
+})
+
+export function json(body, statusCode = 200) {
   return {
     statusCode,
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json; charset=utf-8'
     },
     body: JSON.stringify(body)
   }
 }
 
-export function getStores(event) {
-  connectLambda(event)
-
-  return {
-    events: getStore('events'),
-    members: getStore('members'),
-    messages: getStore('messages'),
-    approvals: getStore('approvals')
-  }
+export function getUserFromEvent(event) {
+  return event?.clientContext?.user || null
 }
 
-export function requireAuth(event) {
-  const authHeader =
-    event?.headers?.authorization ||
-    event?.headers?.Authorization ||
-    ''
+export async function requireUser(event) {
+  const user = getUserFromEvent(event)
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!user?.email) {
     throw new Error('Not authenticated')
   }
 
-  const token = authHeader.replace('Bearer ', '').trim()
+  return user
+}
 
-  if (!token) {
-    throw new Error('Not authenticated')
+export async function getProfileByEmail(email) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('email', String(email).toLowerCase())
+    .maybeSingle()
+
+  if (error) throw error
+  return data
+}
+
+export async function requireAdmin(event) {
+  const user = await requireUser(event)
+  const profile = await getProfileByEmail(user.email)
+
+  if (!profile || profile.role !== 'admin') {
+    throw new Error('Forbidden')
   }
 
+  return { user, profile }
+}
+
+export function parseBody(event) {
   try {
-    const decoded = jwt.decode(token)
-
-    if (!decoded || typeof decoded !== 'object') {
-      throw new Error('Invalid token')
-    }
-
-    return decoded
+    return event?.body ? JSON.parse(event.body) : {}
   } catch {
-    throw new Error('Not authenticated')
+    return {}
   }
-}
-
-export function isAdmin(user) {
-  return (user?.email || '').toLowerCase() === 'frekopetersen1998@gmail.com'
-}
-
-export async function setJSON(store, key, value) {
-  await store.set(key, JSON.stringify(value), {
-    contentType: 'application/json'
-  })
-}
-
-export async function getJSON(store, key) {
-  const raw = await store.get(key, { type: 'text' })
-  return raw ? JSON.parse(raw) : null
-}
-
-export async function listJSON(store) {
-  const result = await store.list()
-  const keys = (result?.blobs || []).map((blob) => blob.key)
-  const values = await Promise.all(keys.map((key) => getJSON(store, key)))
-  return values.filter(Boolean)
 }
