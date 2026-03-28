@@ -1,47 +1,64 @@
-import {
-  getStores,
-  json,
-  requireAuth,
-  isAdmin,
-  getJSON,
-  setJSON
-} from './_utils.mjs'
+import { json, parseBody, requireAdmin, supabase } from './_utils.mjs'
 
-export const handler = async (event) => {
+export default async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return json({ error: 'Method not allowed' }, 405)
+  }
+
   try {
-    const user = requireAuth(event)
+    await requireAdmin(event)
 
-    if (!isAdmin(user)) {
-      return json(403, { error: 'Forbidden' })
+    const body = parseBody(event)
+    const email = String(body.email || '').trim().toLowerCase()
+
+    if (!email) {
+      return json({ error: 'E-mail mangler' }, 400)
     }
 
-    const body = JSON.parse(event.body || '{}')
-    const safeEmail = String(body.email || '').trim().toLowerCase()
+    const { error: requestError } = await supabase
+      .from('access_requests')
+      .update({
+        status: 'approved',
+        handled_at: new Date().toISOString()
+      })
+      .eq('email', email)
 
-    if (!safeEmail) {
-      return json(400, { error: 'Email mangler' })
-    }
+    if (requestError) throw requestError
 
-    const stores = getStores(event)
-    const existing = await getJSON(stores.approvals, safeEmail)
+    const { data: existingProfile, error: profileReadError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', email)
+      .maybeSingle()
 
-    if (!existing) {
-      return json(404, { error: 'Bruger ikke fundet' })
-    }
+    if (profileReadError) throw profileReadError
 
-    await setJSON(stores.approvals, safeEmail, {
-      ...existing,
-      status: 'invited',
-      invitedAt: new Date().toISOString()
-    })
+    const payload = existingProfile
+      ? {
+          email,
+          full_name: existingProfile.full_name || email.split('@')[0],
+          role: existingProfile.role || 'member',
+          status: 'pending'
+        }
+      : {
+          email,
+          full_name: email.split('@')[0],
+          role: 'member',
+          status: 'pending'
+        }
 
-    return json(200, {
+    const { error: profileWriteError } = await supabase
+      .from('profiles')
+      .upsert(payload, { onConflict: 'email' })
+
+    if (profileWriteError) throw profileWriteError
+
+    return json({
       ok: true,
-      message: 'Bruger markeret som inviteret'
+      message: 'Bruger markeret som godkendt'
     })
   } catch (error) {
-    return json(500, {
-      error: error?.message || 'Godkendelse fejlede'
-    })
+    const code = error.message === 'Not authenticated' ? 401 : error.message === 'Forbidden' ? 403 : 500
+    return json({ error: error.message || 'Kunne ikke godkende bruger' }, code)
   }
 }
