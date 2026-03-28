@@ -105,12 +105,17 @@ function clearInviteTokenFromUrl() {
 async function getAccessToken() {
   if (!currentUser) return null
 
-  if (typeof currentUser.jwt === 'function') {
-    try {
-      return await currentUser.jwt()
-    } catch {
-      return null
+  try {
+    if (typeof currentUser.jwt === 'function') {
+      const token = await currentUser.jwt(true)
+      if (token) return token
     }
+  } catch (error) {
+    console.error('jwt() fejl:', error)
+  }
+
+  if (currentUser.token?.access_token) {
+    return currentUser.token.access_token
   }
 
   return null
