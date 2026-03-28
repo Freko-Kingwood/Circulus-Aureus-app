@@ -11,7 +11,7 @@ if (!window.supabase) {
 }
 
 const SUPABASE_URL = 'https://ejzlncnxtlbboqpetuce.supabase.co'
-const SUPABASE_ANON_KEY = 'DIN_sb_publishable_KEY_HER'
+const SUPABASE_ANON_KEY = 'sb_publishable_FEcIPwzSv4Dgan2N3Ngrwg_QNDj9IaO'
 
 const supabase = window.supabase?.createClient
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
