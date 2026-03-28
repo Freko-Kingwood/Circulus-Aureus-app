@@ -1,27 +1,38 @@
-import { getStores, json, requireAuth, listJSON } from './_utils.mjs'
+import { getUserFromEvent, getProfileByEmail, json, supabase } from './_utils.mjs'
 
-export const handler = async (event) => {
+export default async () => {
+  return json({ error: 'Handler not mounted' }, 500)
+}
+
+export async function handler(event) {
   try {
-    requireAuth(event)
+    const identityUser = getUserFromEvent(event)
+    const email = identityUser?.email ? String(identityUser.email).toLowerCase() : null
+    const profile = email ? await getProfileByEmail(email) : null
+    const isAdmin = profile?.role === 'admin'
 
-    const stores = getStores(event)
-
-    const [events, members, messages, approvals] = await Promise.all([
-      listJSON(stores.events),
-      listJSON(stores.members),
-      listJSON(stores.messages),
-      listJSON(stores.approvals)
+    const [eventsRes, membersRes, messagesRes, approvalsRes] = await Promise.all([
+      supabase.from('events').select('*').order('starts_at', { ascending: true }),
+      supabase.from('profiles').select('*').order('created_at', { ascending: true }),
+      supabase.from('messages').select('*').order('created_at', { ascending: false }),
+      isAdmin
+        ? supabase.from('access_requests').select('*').order('created_at', { ascending: false })
+        : Promise.resolve({ data: [], error: null })
     ])
 
-    return json(200, {
-      events,
-      members,
-      messages,
-      approvals
+    if (eventsRes.error) throw eventsRes.error
+    if (membersRes.error) throw membersRes.error
+    if (messagesRes.error) throw messagesRes.error
+    if (approvalsRes.error) throw approvalsRes.error
+
+    return json({
+      events: eventsRes.data || [],
+      members: membersRes.data || [],
+      messages: messagesRes.data || [],
+      approvals: approvalsRes.data || [],
+      me: profile || null
     })
   } catch (error) {
-    return json(401, {
-      error: error?.message || 'Kunne ikke hente data'
-    })
+    return json({ error: error.message || 'Kunne ikke hente data' }, 500)
   }
 }
