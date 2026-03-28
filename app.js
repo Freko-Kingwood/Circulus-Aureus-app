@@ -11,7 +11,8 @@ if (!window.supabase) {
 }
 
 const SUPABASE_URL = 'https://ejzlncnxtlbboqpetuce.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_FEcIPwzSv4Dgan2N3Ngrwg_QNDj9IaO'
+const SUPABASE_ANON_KEY = 'sb_publishable_FEcIPwzSv4Dgan2N3Ngrwg_QNDj9IaO
+'
 
 const supabase = window.supabase?.createClient
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -46,6 +47,16 @@ const approvalList = document.getElementById('approval-list')
 const profileAdminLinkWrap = document.getElementById('profile-admin-link-wrap')
 const openAdminFromProfile = document.getElementById('open-admin-from-profile')
 
+const profileEditorModal = document.getElementById('profile-editor-modal')
+const profileEditorForm = document.getElementById('profile-editor-form')
+const closeProfileEditorBtn = document.getElementById('close-profile-editor')
+const cancelProfileEditorBtn = document.getElementById('cancel-profile-editor')
+
+const editorEmail = document.getElementById('editor-email')
+const editorFullName = document.getElementById('editor-full-name')
+const editorRole = document.getElementById('editor-role')
+const editorStatus = document.getElementById('editor-status')
+
 let currentUser = null
 let currentProfile = null
 let currentData = {
@@ -71,6 +82,38 @@ function showToast(message) {
   toast.style.boxShadow = '0 14px 30px rgba(0,0,0,.28)'
   document.body.appendChild(toast)
   setTimeout(() => toast.remove(), 3800)
+}
+
+function prettyRole(role) {
+  return role === 'admin' ? 'Bestyrelse' : 'Broder'
+}
+
+function prettyRoleInput(role) {
+  return role === 'admin' ? 'admin' : 'member'
+}
+
+function prettyStatus(status) {
+  if (status === 'pending') return 'Afventer'
+  if (status === 'rejected') return 'Afvist'
+  return 'Aktiv'
+}
+
+function openProfileEditorModal(member) {
+  if (!profileEditorModal) return
+
+  editorEmail.value = member.email || ''
+  editorFullName.value = member.full_name || ''
+  editorRole.value = member.role || 'member'
+  editorStatus.value = member.status || 'active'
+
+  profileEditorModal.classList.remove('hidden')
+  profileEditorModal.setAttribute('aria-hidden', 'false')
+}
+
+function closeProfileEditorModal() {
+  if (!profileEditorModal) return
+  profileEditorModal.classList.add('hidden')
+  profileEditorModal.setAttribute('aria-hidden', 'true')
 }
 
 function getInviteToken() {
@@ -150,42 +193,6 @@ async function syncProfile() {
   }
 }
 
-function showLoggedOut(status = 'Afventer login') {
-  authShell?.classList.remove('hidden')
-  appShell?.classList.add('hidden')
-
-  if (identityStatus) identityStatus.textContent = status
-
-  loginBox?.classList.add('hidden')
-  requestBox?.classList.add('hidden')
-  inviteBox?.classList.add('hidden')
-
-  currentUser = null
-  currentProfile = null
-}
-
-function showAuthenticated(user) {
-  currentUser = user
-
-  const email = user?.email || ''
-  const fallbackName = email.split('@')[0] || 'Medlem'
-  const role = currentProfile?.role || 'member'
-  const fullName = currentProfile?.full_name || fallbackName
-
-  authShell?.classList.add('hidden')
-  appShell?.classList.remove('hidden')
-
-  if (identityStatus) identityStatus.textContent = 'Godkendt adgang'
-  if (rolePill) rolePill.textContent = role === 'admin' ? 'Admin' : 'Medlem'
-  if (profileRole) profileRole.textContent = role === 'admin' ? 'Admin' : 'Medlem'
-  if (profileName) profileName.textContent = fullName
-  if (profileEmail) profileEmail.textContent = email
-
-  if (profileAdminLinkWrap) {
-    profileAdminLinkWrap.classList.toggle('hidden', role !== 'admin')
-  }
-}
-
 function activateView(viewName) {
   const titles = {
     dashboard: 'Dashboard',
@@ -210,6 +217,44 @@ function activateView(viewName) {
   if (viewEl) viewEl.classList.add('active')
   if (btnEl) btnEl.classList.add('active')
   if (pageTitle) pageTitle.textContent = titles[viewName] || 'Dashboard'
+}
+
+function showLoggedOut(status = 'Afventer login') {
+  authShell?.classList.remove('hidden')
+  appShell?.classList.add('hidden')
+
+  if (identityStatus) {
+    identityStatus.textContent = status
+  }
+
+  loginBox?.classList.add('hidden')
+  requestBox?.classList.add('hidden')
+  inviteBox?.classList.add('hidden')
+
+  currentUser = null
+  currentProfile = null
+}
+
+function showAuthenticated(user) {
+  currentUser = user
+
+  const email = user?.email || ''
+  const fallbackName = email.split('@')[0] || 'Broder'
+  const role = currentProfile?.role || 'member'
+  const fullName = currentProfile?.full_name || fallbackName
+
+  authShell?.classList.add('hidden')
+  appShell?.classList.remove('hidden')
+
+  if (identityStatus) identityStatus.textContent = 'Godkendt adgang'
+  if (rolePill) rolePill.textContent = prettyRole(role)
+  if (profileRole) profileRole.textContent = prettyRole(role)
+  if (profileName) profileName.textContent = fullName
+  if (profileEmail) profileEmail.textContent = email
+
+  if (profileAdminLinkWrap) {
+    profileAdminLinkWrap.classList.toggle('hidden', role !== 'admin')
+  }
 }
 
 function renderStats() {
@@ -250,8 +295,8 @@ function renderMembers() {
     <article class="item">
       <h3>${member.full_name || member.email || 'Ukendt medlem'}</h3>
       <p class="muted">${member.email || ''}</p>
-      <p class="muted">Rolle: ${member.role || 'member'}</p>
-      <p class="muted">Status: ${member.status || 'active'}</p>
+      <p class="muted">Rolle: ${prettyRole(member.role || 'member')}</p>
+      <p class="muted">Status: ${prettyStatus(member.status || 'active')}</p>
       ${
         isAdmin
           ? `
@@ -260,7 +305,7 @@ function renderMembers() {
                 type="button"
                 data-edit-profile-email="${member.email}"
                 data-edit-profile-name="${member.full_name || ''}"
-                data-edit-profile-role="${member.role || 'member'}"
+                data-edit-profile-role="${prettyRoleInput(member.role || 'member')}"
                 data-edit-profile-status="${member.status || 'active'}"
               >
                 Redigér profil
@@ -332,6 +377,7 @@ function renderAll() {
 async function loadData() {
   try {
     const data = await fetchJSON('/.netlify/functions/list-data')
+
     currentData = {
       events: data.events || [],
       members: data.members || [],
@@ -351,32 +397,12 @@ async function loadData() {
 }
 
 async function openProfileEditor({ email, fullName, role, status }) {
-  const newName = window.prompt('Navn', fullName || '')
-  if (newName === null) return
-
-  const newRole = window.prompt('Rolle (admin/member)', role || 'member')
-  if (newRole === null) return
-
-  const newStatus = window.prompt('Status (pending/active/rejected)', status || 'active')
-  if (newStatus === null) return
-
-  try {
-    await fetchJSON('/.netlify/functions/admin-update-profile', {
-      method: 'POST',
-      body: JSON.stringify({
-        email,
-        full_name: newName,
-        role: newRole,
-        status: newStatus
-      })
-    })
-
-    showToast('Profil opdateret')
-    await loadData()
-  } catch (error) {
-    console.error('admin-update-profile fejl:', error)
-    showToast(error.message || 'Kunne ikke opdatere profil')
-  }
+  openProfileEditorModal({
+    email,
+    full_name: fullName,
+    role,
+    status
+  })
 }
 
 async function testDB() {
@@ -429,7 +455,11 @@ requestAccessForm?.addEventListener('submit', async (e) => {
 
   try {
     const form = new FormData(e.target)
-    const payload = Object.fromEntries(form)
+    const payload = {
+      name: String(form.get('name') || '').trim(),
+      email: String(form.get('email') || '').trim(),
+      note: String(form.get('note') || '').trim()
+    }
 
     const result = await fetchJSON('/.netlify/functions/request-access', {
       method: 'POST',
@@ -455,7 +485,9 @@ inviteForm?.addEventListener('submit', async (e) => {
 
   if (!token) {
     showToast('Intet invite-token fundet')
-    if (identityStatus) identityStatus.textContent = 'Invite-fejl: Intet invite-token fundet'
+    if (identityStatus) {
+      identityStatus.textContent = 'Invite-fejl: Intet invite-token fundet'
+    }
     return
   }
 
@@ -501,7 +533,38 @@ inviteForm?.addEventListener('submit', async (e) => {
   }
 })
 
+profileEditorForm?.addEventListener('submit', async (e) => {
+  e.preventDefault()
+
+  try {
+    await fetchJSON('/.netlify/functions/admin-update-profile', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: editorEmail.value,
+        full_name: editorFullName.value.trim(),
+        role: editorRole.value,
+        status: editorStatus.value
+      })
+    })
+
+    closeProfileEditorModal()
+    showToast('Profil opdateret')
+    await loadData()
+  } catch (error) {
+    console.error('admin-update-profile fejl:', error)
+    showToast(error.message || 'Kunne ikke opdatere profil')
+  }
+})
+
+closeProfileEditorBtn?.addEventListener('click', closeProfileEditorModal)
+cancelProfileEditorBtn?.addEventListener('click', closeProfileEditorModal)
+
 document.addEventListener('click', async (e) => {
+  if (e.target.closest('[data-close-profile-editor="true"]')) {
+    closeProfileEditorModal()
+    return
+  }
+
   const editProfileBtn = e.target.closest('[data-edit-profile-email]')
   if (editProfileBtn) {
     await openProfileEditor({
