@@ -1,6 +1,10 @@
-import netlifyIdentity from 'netlify-identity-widget'
+const netlifyIdentity = window.netlifyIdentity
 
-netlifyIdentity.init()
+if (!netlifyIdentity) {
+  console.error('Netlify Identity widget blev ikke loadet')
+} else {
+  netlifyIdentity.init()
+}
 
 const authShell = document.getElementById('auth-shell')
 const appShell = document.getElementById('app-shell')
