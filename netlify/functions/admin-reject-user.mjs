@@ -1,6 +1,6 @@
 import { json, parseBody, requireAdmin, supabase } from './_utils.mjs'
 
-export default async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return json({ error: 'Method not allowed' }, 405)
   }
