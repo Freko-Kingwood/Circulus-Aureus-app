@@ -14,7 +14,6 @@ const loginBox = document.getElementById('login-box')
 const requestBox = document.getElementById('request-box')
 const inviteBox = document.getElementById('invite-box')
 
-const loginForm = document.getElementById('login-form')
 const requestAccessForm = document.getElementById('request-access-form')
 const inviteForm = document.getElementById('invite-form')
 
@@ -148,6 +147,7 @@ function showLoggedOut(status = 'Afventer login') {
 
   if (loginBox) loginBox.classList.add('hidden')
   if (requestBox) requestBox.classList.add('hidden')
+  if (inviteBox) inviteBox.classList.add('hidden')
 }
 
 function activateView(viewName) {
@@ -190,16 +190,14 @@ function renderEvents() {
   }
 
   eventList.innerHTML = currentData.events
-    .map((event) => {
-      return `
-        <article class="item">
-          <p class="eyebrow">${event.datetime || event.date || ''}</p>
-          <h3>${event.title || 'Uden titel'}</h3>
-          <p class="muted">${event.location || ''}</p>
-          <p class="muted">${event.description || ''}</p>
-        </article>
-      `
-    })
+    .map((event) => `
+      <article class="item">
+        <p class="eyebrow">${event.datetime || event.date || ''}</p>
+        <h3>${event.title || 'Uden titel'}</h3>
+        <p class="muted">${event.location || ''}</p>
+        <p class="muted">${event.description || ''}</p>
+      </article>
+    `)
     .join('')
 }
 
@@ -210,15 +208,13 @@ function renderMembers() {
   }
 
   memberList.innerHTML = currentData.members
-    .map((member) => {
-      return `
-        <article class="item">
-          <h3>${member.name || 'Ukendt medlem'}</h3>
-          <p class="muted">${member.email || ''}</p>
-          <p class="muted">${member.since ? `Medlem siden ${member.since}` : ''}</p>
-        </article>
-      `
-    })
+    .map((member) => `
+      <article class="item">
+        <h3>${member.name || 'Ukendt medlem'}</h3>
+        <p class="muted">${member.email || ''}</p>
+        <p class="muted">${member.since ? `Medlem siden ${member.since}` : ''}</p>
+      </article>
+    `)
     .join('')
 }
 
@@ -229,15 +225,13 @@ function renderMessages() {
   }
 
   messageList.innerHTML = currentData.messages
-    .map((message) => {
-      return `
-        <article class="item">
-          <p class="eyebrow">${message.createdAt || ''}</p>
-          <h3>${message.title || 'Besked'}</h3>
-          <p class="muted">${message.text || message.body || ''}</p>
-        </article>
-      `
-    })
+    .map((message) => `
+      <article class="item">
+        <p class="eyebrow">${message.createdAt || ''}</p>
+        <h3>${message.title || 'Besked'}</h3>
+        <p class="muted">${message.text || message.body || ''}</p>
+      </article>
+    `)
     .join('')
 }
 
@@ -250,21 +244,19 @@ function renderApprovals() {
   }
 
   approvalList.innerHTML = pending
-    .map((item) => {
-      return `
-        <article class="item">
-          <p class="eyebrow">Afventende godkendelse</p>
-          <h3>${item.name || 'Ukendt navn'}</h3>
-          <p class="muted">${item.email || ''}</p>
-          <p class="muted">${item.note || ''}</p>
-          <div class="item-actions">
-            <button type="button" data-approve-email="${item.email}">Markér som inviteret</button>
-            <button type="button" data-copy-email="${item.email}">Kopiér e-mail</button>
-            <button class="btn-danger" type="button" data-reject-email="${item.email}">Afvis</button>
-          </div>
-        </article>
-      `
-    })
+    .map((item) => `
+      <article class="item">
+        <p class="eyebrow">Afventende godkendelse</p>
+        <h3>${item.name || 'Ukendt navn'}</h3>
+        <p class="muted">${item.email || ''}</p>
+        <p class="muted">${item.note || ''}</p>
+        <div class="item-actions">
+          <button type="button" data-approve-email="${item.email}">Markér som inviteret</button>
+          <button type="button" data-copy-email="${item.email}">Kopiér e-mail</button>
+          <button class="btn-danger" type="button" data-reject-email="${item.email}">Afvis</button>
+        </div>
+      </article>
+    `)
     .join('')
 }
 
@@ -287,15 +279,18 @@ async function loadData() {
 }
 
 document.getElementById('open-login')?.addEventListener('click', () => {
-  loginBox.classList.toggle('hidden')
-  requestBox.classList.add('hidden')
-  inviteBox.classList.add('hidden')
+  if (!netlifyIdentity) {
+    showToast('Netlify Identity widget blev ikke loadet')
+    return
+  }
+
+  netlifyIdentity.open('login')
 })
 
 document.getElementById('open-request')?.addEventListener('click', () => {
   requestBox.classList.toggle('hidden')
-  loginBox.classList.add('hidden')
-  inviteBox.classList.add('hidden')
+  if (loginBox) loginBox.classList.add('hidden')
+  if (inviteBox) inviteBox.classList.add('hidden')
 })
 
 document.getElementById('logout-btn')?.addEventListener('click', async () => {
@@ -316,26 +311,6 @@ document.querySelectorAll('.nav-item[data-view]').forEach((btn) => {
   btn.addEventListener('click', () => {
     activateView(btn.dataset.view)
   })
-})
-
-loginForm?.addEventListener('submit', async (e) => {
-  e.preventDefault()
-
-  const fd = new FormData(e.target)
-  const email = String(fd.get('email') || '').trim()
-  const password = String(fd.get('password') || '')
-
-  try {
-    const user = await netlifyIdentity.login(email, password, true)
-    showAuthenticated(user)
-    loginBox.classList.add('hidden')
-    activateView('dashboard')
-    await loadData()
-  } catch (error) {
-    console.error('login fejl:', error)
-    showToast(error?.message || 'Login fejlede')
-    identityStatus.textContent = `Login-fejl: ${error?.message || 'ukendt fejl'}`
-  }
 })
 
 requestAccessForm?.addEventListener('submit', async (e) => {
@@ -445,6 +420,35 @@ document.addEventListener('click', async (e) => {
   }
 })
 
+if (netlifyIdentity) {
+  netlifyIdentity.on('init', async (user) => {
+    if (user) {
+      showAuthenticated(user)
+      activateView('dashboard')
+      await loadData()
+    } else {
+      showLoggedOut('Afventer login')
+    }
+  })
+
+  netlifyIdentity.on('login', async (user) => {
+    netlifyIdentity.close()
+    showAuthenticated(user)
+    activateView('dashboard')
+    await loadData()
+  })
+
+  netlifyIdentity.on('logout', () => {
+    currentUser = null
+    showLoggedOut()
+  })
+
+  netlifyIdentity.on('error', (err) => {
+    console.error('Identity-fejl:', err)
+    showToast(err?.message || 'Identity-fejl')
+  })
+}
+
 async function boot() {
   const hash = window.location.hash || ''
 
@@ -452,28 +456,15 @@ async function boot() {
     if (hash.includes('invite_token')) {
       showLoggedOut('Invitation fundet — vælg adgangskode')
       inviteBox.classList.remove('hidden')
-      loginBox.classList.add('hidden')
-      requestBox.classList.add('hidden')
+      if (loginBox) loginBox.classList.add('hidden')
+      if (requestBox) requestBox.classList.add('hidden')
       return
     }
 
-    let callbackResult = null
-
-    try {
-      callbackResult = await netlifyIdentity.completeUrlTokenFlow()
-    } catch (error) {
-      console.error('completeUrlTokenFlow fejl:', error)
-    }
-
-    const user = callbackResult?.user || netlifyIdentity.currentUser()
+    const user = netlifyIdentity?.currentUser?.()
 
     if (user) {
       showAuthenticated(user)
-
-      if (window.location.hash) {
-        history.replaceState({}, document.title, window.location.pathname)
-      }
-
       activateView('dashboard')
       await loadData()
       return
