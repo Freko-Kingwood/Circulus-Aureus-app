@@ -4,19 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Circulus Aureus</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <div class="ambient"></div>
 
+  <!-- AUTH / FORSIDE -->
   <div id="auth-shell" class="auth-shell">
     <main class="auth-wrap">
       <section class="glass hero">
         <div class="crest-wrap">
-          <img class="crest" src="/assets/logo.png" alt="Circulus Aureus våbenskjold" />
+          <img
+            class="crest"
+            src="/assets/logo.png"
+            alt="Circulus Aureus våbenskjold"
+          />
         </div>
 
         <p class="eyebrow center">CIRCULUS AUREUS</p>
@@ -30,6 +39,7 @@
           <button id="open-request" class="btn btn-secondary" type="button">ANMOD OM ADGANG</button>
         </div>
 
+        <!-- LOGIN INFO -->
         <section id="login-box" class="glass card hidden">
           <p class="eyebrow">LOG IND</p>
           <p class="muted">
@@ -37,6 +47,7 @@
           </p>
         </section>
 
+        <!-- REQUEST ACCESS -->
         <section id="request-box" class="glass card hidden">
           <p class="eyebrow">ANMOD OM ADGANG</p>
           <h2 class="card-title">Send anmodning</h2>
@@ -61,6 +72,7 @@
           </form>
         </section>
 
+        <!-- INVITE ACCEPT -->
         <section id="invite-box" class="glass card hidden">
           <p class="eyebrow">OPRET ADGANGSKODE</p>
           <h2 class="card-title">Aktivér konto</h2>
@@ -95,18 +107,21 @@
     </main>
   </div>
 
+  <!-- APP -->
   <div id="app-shell" class="app-shell hidden">
     <div class="main-panel">
+      <!-- TOP HEADER -->
       <header class="glass hero">
         <div class="section-head">
           <div>
             <p class="eyebrow">PRIVAT OMRÅDE</p>
-            <h1 id="page-title" class="hero-title">Dashboard</h1>
+            <h1 id="page-title" class="hero-title">DASHBOARD</h1>
           </div>
           <div id="role-pill" class="pill">Broder</div>
         </div>
       </header>
 
+      <!-- DASHBOARD -->
       <section id="view-dashboard" class="view active">
         <div class="grid grid-3">
           <article class="glass card">
@@ -134,6 +149,7 @@
         </article>
       </section>
 
+      <!-- EVENTS -->
       <section id="view-events" class="view">
         <article class="glass card">
           <p class="eyebrow">BEGIVENHEDER</p>
@@ -142,6 +158,7 @@
         </article>
       </section>
 
+      <!-- MEMBERS -->
       <section id="view-members" class="view">
         <article class="glass card">
           <p class="eyebrow">MEDLEMMER</p>
@@ -150,6 +167,7 @@
         </article>
       </section>
 
+      <!-- MESSAGES -->
       <section id="view-messages" class="view">
         <article class="glass card">
           <p class="eyebrow">BESKEDER</p>
@@ -158,6 +176,7 @@
         </article>
       </section>
 
+      <!-- PROFILE -->
       <section id="view-profile" class="view">
         <div class="grid grid-2">
           <article class="glass card">
@@ -179,6 +198,7 @@
         </div>
       </section>
 
+      <!-- ADMIN -->
       <section id="view-admin" class="view">
         <div class="grid grid-2">
           <article class="glass card">
@@ -198,6 +218,7 @@
       </section>
     </div>
 
+    <!-- BOTTOM NAV -->
     <nav class="bottom-nav">
       <button class="nav-item active" data-view="dashboard" type="button">Hjem</button>
       <button class="nav-item" data-view="events" type="button">Events</button>
@@ -207,6 +228,7 @@
     </nav>
   </div>
 
+  <!-- PROFILE EDITOR MODAL -->
   <div id="profile-editor-modal" class="modal hidden" aria-hidden="true">
     <div class="modal-backdrop" data-close-profile-editor="true"></div>
 
@@ -254,6 +276,6 @@
 
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="/app.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>
