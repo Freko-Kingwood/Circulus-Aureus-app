@@ -16,7 +16,7 @@
 <body>
   <div class="ambient"></div>
 
-  <!-- AUTH / FORSIDE -->
+  <!-- FORSIDE / AUTH -->
   <div id="auth-shell" class="auth-shell">
     <main class="auth-wrap">
       <section class="glass hero">
@@ -39,7 +39,6 @@
           <button id="open-request" class="btn btn-secondary" type="button">ANMOD OM ADGANG</button>
         </div>
 
-        <!-- LOGIN INFO -->
         <section id="login-box" class="glass card hidden">
           <p class="eyebrow">LOG IND</p>
           <p class="muted">
@@ -47,7 +46,6 @@
           </p>
         </section>
 
-        <!-- REQUEST ACCESS -->
         <section id="request-box" class="glass card hidden">
           <p class="eyebrow">ANMOD OM ADGANG</p>
           <h2 class="card-title">Send anmodning</h2>
@@ -65,14 +63,17 @@
 
             <label class="field">
               <span>Besked</span>
-              <textarea name="note" rows="4" placeholder="Skriv kort hvem du er"></textarea>
+              <textarea
+                name="note"
+                rows="4"
+                placeholder="Skriv kort hvem du er"
+              ></textarea>
             </label>
 
             <button class="btn btn-primary" type="submit">SEND ANMODNING</button>
           </form>
         </section>
 
-        <!-- INVITE ACCEPT -->
         <section id="invite-box" class="glass card hidden">
           <p class="eyebrow">OPRET ADGANGSKODE</p>
           <h2 class="card-title">Aktivér konto</h2>
@@ -109,40 +110,39 @@
 
   <!-- APP -->
   <div id="app-shell" class="app-shell hidden">
-    <div class="main-panel">
-      <!-- TOP HEADER -->
-      <header class="glass hero">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">PRIVAT OMRÅDE</p>
-            <h1 id="page-title" class="hero-title">DASHBOARD</h1>
-          </div>
-          <div id="role-pill" class="pill">Broder</div>
-        </div>
-      </header>
-
+    <main class="main-panel">
       <!-- DASHBOARD -->
       <section id="view-dashboard" class="view active">
-        <div class="grid grid-3">
-          <article class="glass card">
-            <p class="eyebrow">BEGIVENHEDER</p>
-            <h3 id="stat-events" class="card-title">0</h3>
+        <header class="glass hero section-hero">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">PRIVAT OMRÅDE</p>
+              <h1 id="page-title" class="hero-title">DASHBOARD</h1>
+            </div>
+            <div id="role-pill" class="pill">Medlem</div>
+          </div>
+        </header>
+
+        <div class="grid grid-3 stats-grid">
+          <article class="glass card stat-card">
+            <h3 id="stat-events" class="stat-number">0</h3>
+            <p class="stat-label">Begivenheder</p>
           </article>
 
-          <article class="glass card">
-            <p class="eyebrow">MEDLEMMER</p>
-            <h3 id="stat-members" class="card-title">0</h3>
+          <article class="glass card stat-card">
+            <h3 id="stat-members" class="stat-number">0</h3>
+            <p class="stat-label">Medlemmer</p>
           </article>
 
-          <article class="glass card">
-            <p class="eyebrow">BESKEDER</p>
-            <h3 id="stat-messages" class="card-title">0</h3>
+          <article class="glass card stat-card">
+            <h3 id="stat-messages" class="stat-number">0</h3>
+            <p class="stat-label">Beskeder</p>
           </article>
         </div>
 
         <article class="glass card">
           <p class="eyebrow">VELKOMMEN</p>
-          <h3 class="card-title">DET INDRE RUM ER ÅBENT</h3>
+          <h2 class="card-title">DET INDRE RUM ER ÅBENT</h2>
           <p class="muted">
             Her finder du kommende begivenheder, medlemmer, interne beskeder og admin-godkendelser samlet ét sted.
           </p>
@@ -151,74 +151,138 @@
 
       <!-- EVENTS -->
       <section id="view-events" class="view">
+        <header class="glass hero section-hero">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">PRIVAT OMRÅDE</p>
+              <h1 class="hero-title">BEGIVENHEDER</h1>
+            </div>
+            <div class="pill" id="events-role-pill">Medlem</div>
+          </div>
+        </header>
+
         <article class="glass card">
           <p class="eyebrow">BEGIVENHEDER</p>
-          <h3 class="card-title">KOMMENDE SAMMENKOMSTER</h3>
+          <h2 class="card-title">KOMMENDE ARRANGEMENTER</h2>
           <div id="event-list" class="list"></div>
         </article>
       </section>
 
       <!-- MEMBERS -->
       <section id="view-members" class="view">
+        <header class="glass hero section-hero">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">PRIVAT OMRÅDE</p>
+              <h1 class="hero-title">MEDLEMMER</h1>
+            </div>
+            <div class="pill" id="members-role-pill">Medlem</div>
+          </div>
+        </header>
+
         <article class="glass card">
           <p class="eyebrow">MEDLEMMER</p>
-          <h3 class="card-title">LOGENS BRØDRE</h3>
+          <h2 class="card-title">LOGENS BRØDRE</h2>
           <div id="member-list" class="list"></div>
         </article>
       </section>
 
       <!-- MESSAGES -->
       <section id="view-messages" class="view">
+        <header class="glass hero section-hero">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">PRIVAT OMRÅDE</p>
+              <h1 class="hero-title">BESKEDER</h1>
+            </div>
+            <div class="pill" id="messages-role-pill">Medlem</div>
+          </div>
+        </header>
+
         <article class="glass card">
           <p class="eyebrow">BESKEDER</p>
-          <h3 class="card-title">INTERNE BESKEDER</h3>
+          <h2 class="card-title">INTERN KOMMUNIKATION</h2>
           <div id="message-list" class="list"></div>
         </article>
       </section>
 
       <!-- PROFILE -->
       <section id="view-profile" class="view">
-        <div class="grid grid-2">
-          <article class="glass card">
-            <p class="eyebrow">MIN PROFIL</p>
-            <h3 id="profile-name" class="card-title">Broder</h3>
-            <p id="profile-email" class="muted"></p>
-            <p class="muted">Rolle: <span id="profile-role">Broder</span></p>
-
-            <div id="profile-admin-link-wrap" class="item-actions hidden">
-              <button id="open-admin-from-profile" class="btn btn-secondary" type="button">
-                GÅ TIL ADMINPANEL
-              </button>
+        <header class="glass hero section-hero">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">PRIVAT OMRÅDE</p>
+              <h1 class="hero-title">PROFIL</h1>
             </div>
+            <div class="pill" id="profile-role-pill">Medlem</div>
+          </div>
+        </header>
 
-            <div class="item-actions">
-              <button id="logout-btn" class="btn btn-primary" type="button">LOG UD</button>
+        <article class="glass card">
+          <p class="eyebrow">DIGITALT MEDLEMSKORT</p>
+          <h2 id="profile-name" class="card-title">BRODER</h2>
+          <p id="profile-email" class="muted"></p>
+
+          <div class="item-actions">
+            <div class="pill small-pill">
+              <span id="profile-role">Medlem</span>
             </div>
-          </article>
-        </div>
+          </div>
+
+          <div id="profile-admin-link-wrap" class="item-actions hidden">
+            <button
+              id="open-admin-from-profile"
+              class="btn btn-secondary"
+              type="button"
+            >
+              GÅ TIL ADMINPANEL
+            </button>
+          </div>
+        </article>
+
+        <article class="glass card">
+          <p class="eyebrow">STATUS</p>
+          <h2 class="card-title">AKTIV ADGANG</h2>
+          <p class="muted">Din adgang styres via Netlify Identity.</p>
+
+          <div class="item-actions">
+            <button id="logout-btn" class="btn btn-primary" type="button">
+              LOG UD
+            </button>
+          </div>
+        </article>
       </section>
 
       <!-- ADMIN -->
       <section id="view-admin" class="view">
+        <header class="glass hero section-hero">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">PRIVAT OMRÅDE</p>
+              <h1 class="hero-title">ADMINPANEL</h1>
+            </div>
+            <div class="pill">Admin</div>
+          </div>
+        </header>
+
         <div class="grid grid-2">
           <article class="glass card">
             <p class="eyebrow">AFVENTENDE GODKENDELSER</p>
-            <h3 class="card-title">ANMODNINGER</h3>
+            <h2 class="card-title">ANMODNINGER</h2>
             <div id="approval-list" class="list"></div>
           </article>
 
           <article class="glass card">
             <p class="eyebrow">ADMIN STATUS</p>
-            <h3 class="card-title">KONTROLRUM</h3>
+            <h2 class="card-title">KONTROLRUM</h2>
             <p class="muted">
               Her kan du godkende eller afvise adgangsanmodninger.
             </p>
           </article>
         </div>
       </section>
-    </div>
+    </main>
 
-    <!-- BOTTOM NAV -->
     <nav class="bottom-nav">
       <button class="nav-item active" data-view="dashboard" type="button">Hjem</button>
       <button class="nav-item" data-view="events" type="button">Events</button>
@@ -267,7 +331,9 @@
         </label>
 
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="cancel-profile-editor">Annuller</button>
+          <button type="button" class="btn btn-secondary" id="cancel-profile-editor">
+            Annuller
+          </button>
           <button type="submit" class="btn btn-primary">Gem ændringer</button>
         </div>
       </form>
