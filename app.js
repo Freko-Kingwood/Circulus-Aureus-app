@@ -2,8 +2,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const netlifyIdentity = window.netlifyIdentity
   const supabaseGlobal = window.supabase
 
-  const SUPABASE_URL = 'DIN_SUPABASE_URL'
-  const SUPABASE_ANON_KEY = 'DIN_SUPABASE_PUBLISHABLE_KEY'
+  const SUPABASE_URL = 'https://ejzlncnxtlbboqpetuce.supabase.co'
+  const SUPABASE_ANON_KEY = 'sb_publishable_FEcIPwzSv4Dgan2N3Ngrwg_QNDj9IaO'
 
   if (!netlifyIdentity) {
     console.error('Netlify Identity widget blev ikke loadet')
