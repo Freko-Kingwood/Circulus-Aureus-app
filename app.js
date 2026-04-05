@@ -10,8 +10,7 @@ if (!window.supabase) {
   console.error('Supabase script blev ikke loadet')
 }
 
-const SUPABASE_URL = 'https://ejzlncnxtlbboqpetuce.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_FEcIPwzSv4Dgan2N3Ngrwg_QNDj9IaO
+
 '
 
 const supabase = window.supabase?.createClient
