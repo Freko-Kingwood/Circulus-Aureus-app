@@ -2,63 +2,200 @@
 <html lang="da">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Circulus Aureus</title>
 
-  <link rel="stylesheet" href="styles.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
 
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
-
 <body>
+  <div class="ambient"></div>
 
-  <!-- LOGIN -->
-  <section id="view-login" class="center">
-    <img src="/assets/crest.jpeg" class="crest" />
+  <!-- LOGIN / FORSIDE -->
+  <section id="view-login" class="login-view">
+    <div class="shell auth-shell">
+      <div class="glass panel auth-panel">
+        <img
+          src="/assets/crest.jpeg"
+          alt="Circulus Aureus logo"
+          class="crest"
+        />
 
-    <p class="eyebrow">Circulus Aureus</p>
-    <h1>DET DIGITALE LOGERUM</h1>
+        <p class="eyebrow center">CIRCULUS AUREUS</p>
+        <h1 class="hero-title center">DET DIGITALE<br />LOGERUM</h1>
 
-    <p class="muted">
-      Privat medlemsplatform til begivenheder, medlemmer og interne beskeder.
-    </p>
+        <p class="muted hero-copy center">
+          Privat medlemsplatform til begivenheder, referater, medlemmer og interne beskeder.
+        </p>
 
-    <button id="login-btn" class="btn primary">LOG IND</button>
+        <div class="auth-actions">
+          <button id="login-btn" class="btn btn-primary" type="button">LOG IND</button>
+          <button id="request-btn" class="btn btn-secondary" type="button">ANMOD OM ADGANG</button>
+        </div>
+
+        <div id="request-box" class="sub-card hidden">
+          <p class="eyebrow">ANMOD OM ADGANG</p>
+          <p class="muted">
+            Denne del kobler vi på i næste step. Lige nu holder vi design og login stabilt.
+          </p>
+        </div>
+
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span id="identity-status">Afventer login</span>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- APP -->
   <div id="app" class="hidden">
+    <div class="shell app-shell">
 
-    <header class="hero">
-      <p class="eyebrow">Privat område</p>
-      <h2>DASHBOARD</h2>
-      <span id="user-role" class="pill">Medlem</span>
-    </header>
+      <!-- HOME -->
+      <section id="view-home" class="view active">
+        <header class="glass panel top-panel">
+          <div class="top-head">
+            <div>
+              <p class="eyebrow">PRIVAT OMRÅDE</p>
+              <h2 class="page-title">DASHBOARD</h2>
+            </div>
+            <span id="user-role" class="role-pill">Medlem</span>
+          </div>
+        </header>
 
-    <section id="view-home" class="view active">
-      <div class="card">0<br><span>Begivenheder</span></div>
-      <div class="card">0<br><span>Medlemmer</span></div>
-      <div class="card">0<br><span>Beskeder</span></div>
-    </section>
+        <div class="stack">
+          <article class="glass panel stat-panel">
+            <div class="stat-number">0</div>
+            <div class="stat-label">Begivenheder</div>
+          </article>
 
-    <section id="view-profile" class="view">
-      <div class="card">
-        <p class="eyebrow">Profil</p>
-        <h3 id="user-name"></h3>
-        <p id="user-email"></p>
-        <button id="logout-btn" class="btn secondary">LOG UD</button>
-      </div>
-    </section>
+          <article class="glass panel stat-panel">
+            <div class="stat-number">0</div>
+            <div class="stat-label">Medlemmer</div>
+          </article>
+
+          <article class="glass panel stat-panel">
+            <div class="stat-number">0</div>
+            <div class="stat-label">Beskeder</div>
+          </article>
+
+          <article class="glass panel">
+            <p class="eyebrow">VELKOMMEN</p>
+            <h3 class="card-title">DET INDRE RUM ER ÅBENT</h3>
+            <p class="muted">
+              Basen er nu stabil. Næste step bliver at koble rigtige data på begivenheder, medlemmer og beskeder.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- EVENTS -->
+      <section id="view-events" class="view">
+        <header class="glass panel top-panel">
+          <div class="top-head">
+            <div>
+              <p class="eyebrow">PRIVAT OMRÅDE</p>
+              <h2 class="page-title">BEGIVENHEDER</h2>
+            </div>
+            <span class="role-pill">Medlem</span>
+          </div>
+        </header>
+
+        <article class="glass panel">
+          <p class="eyebrow">BEGIVENHEDER</p>
+          <h3 class="card-title">KOMMENDE ARRANGEMENTER</h3>
+          <p class="muted">Vi kobler event-data på i næste version.</p>
+        </article>
+      </section>
+
+      <!-- MEMBERS -->
+      <section id="view-members" class="view">
+        <header class="glass panel top-panel">
+          <div class="top-head">
+            <div>
+              <p class="eyebrow">PRIVAT OMRÅDE</p>
+              <h2 class="page-title">MEDLEMMER</h2>
+            </div>
+            <span class="role-pill">Medlem</span>
+          </div>
+        </header>
+
+        <article class="glass panel">
+          <p class="eyebrow">MEDLEMMER</p>
+          <h3 class="card-title">LOGENS BRØDRE</h3>
+          <p class="muted">Medlemslisten kobles på i næste version.</p>
+        </article>
+      </section>
+
+      <!-- MESSAGES -->
+      <section id="view-messages" class="view">
+        <header class="glass panel top-panel">
+          <div class="top-head">
+            <div>
+              <p class="eyebrow">PRIVAT OMRÅDE</p>
+              <h2 class="page-title">BESKEDER</h2>
+            </div>
+            <span class="role-pill">Medlem</span>
+          </div>
+        </header>
+
+        <article class="glass panel">
+          <p class="eyebrow">BESKEDER</p>
+          <h3 class="card-title">INTERN KOMMUNIKATION</h3>
+          <p class="muted">Beskedsystemet kobles på i næste version.</p>
+        </article>
+      </section>
+
+      <!-- PROFILE -->
+      <section id="view-profile" class="view">
+        <header class="glass panel top-panel">
+          <div class="top-head">
+            <div>
+              <p class="eyebrow">PRIVAT OMRÅDE</p>
+              <h2 class="page-title">PROFIL</h2>
+            </div>
+            <span id="user-role-profile" class="role-pill">Medlem</span>
+          </div>
+        </header>
+
+        <article class="glass panel">
+          <p class="eyebrow">DIGITALT MEDLEMSKORT</p>
+          <h3 id="user-name" class="card-title">BRODER</h3>
+          <p id="user-email" class="muted">ikke logget ind</p>
+
+          <div class="chip-row">
+            <span id="profile-role-chip" class="role-pill small-role-pill">Medlem</span>
+          </div>
+        </article>
+
+        <article class="glass panel">
+          <p class="eyebrow">STATUS</p>
+          <h3 class="card-title">AKTIV ADGANG</h3>
+          <p class="muted">Din adgang styres via Netlify Identity.</p>
+
+          <div class="profile-actions">
+            <button id="logout-btn" class="btn btn-secondary" type="button">LOG UD</button>
+          </div>
+        </article>
+      </section>
+
+    </div>
 
     <nav class="bottom-nav">
-      <button data-view="home" class="nav-item active">Hjem</button>
-      <button data-view="profile" class="nav-item">Profil</button>
+      <button data-view="home" class="nav-item active" type="button">Hjem</button>
+      <button data-view="events" class="nav-item" type="button">Events</button>
+      <button data-view="members" class="nav-item" type="button">Medl.</button>
+      <button data-view="messages" class="nav-item" type="button">Besked</button>
+      <button data-view="profile" class="nav-item" type="button">Profil</button>
     </nav>
-
   </div>
 
-  <script src="app.js"></script>
-
+  <script src="/app.js"></script>
 </body>
 </html>
