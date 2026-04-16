@@ -6,20 +6,12 @@
   <title>Circulus Aureus</title>
 
   <link rel="stylesheet" href="styles.css" />
-
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
-
-  <!-- Netlify Identity -->
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 
 <body>
-
-  <!-- LOGIN VIEW -->
   <section id="view-login">
-
-    <!-- 🔥 LOGO FIXET HER -->
     <img src="/assets/crest.jpeg" alt="Circulus Aureus logo" class="crest">
 
     <p class="eyebrow">Circulus Aureus</p>
@@ -31,27 +23,21 @@
 
     <button id="login-btn" class="btn primary">LOG IND</button>
     <button id="request-btn" class="btn secondary">ANMOD OM ADGANG</button>
-
   </section>
 
-  <!-- APP -->
   <div id="app" class="hidden">
-
-    <!-- HEADER -->
     <header class="hero">
       <p class="eyebrow">Privat område</p>
       <h2>DASHBOARD</h2>
       <span id="user-role" class="pill">Medlem</span>
     </header>
 
-    <!-- DASHBOARD -->
     <section id="view-home" class="view active">
       <div class="card">0<br><span>Begivenheder</span></div>
       <div class="card">0<br><span>Medlemmer</span></div>
       <div class="card">0<br><span>Beskeder</span></div>
     </section>
 
-    <!-- EVENTS -->
     <section id="view-events" class="view">
       <div class="card">
         <p class="eyebrow">Begivenheder</p>
@@ -60,7 +46,6 @@
       </div>
     </section>
 
-    <!-- MEMBERS -->
     <section id="view-members" class="view">
       <div class="card">
         <p class="eyebrow">Medlemmer</p>
@@ -68,7 +53,6 @@
       </div>
     </section>
 
-    <!-- MESSAGES -->
     <section id="view-messages" class="view">
       <div class="card">
         <p class="eyebrow">Beskeder</p>
@@ -76,7 +60,6 @@
       </div>
     </section>
 
-    <!-- PROFILE -->
     <section id="view-profile" class="view">
       <div class="card">
         <p class="eyebrow">Digitalt medlemskort</p>
@@ -86,7 +69,6 @@
       </div>
     </section>
 
-    <!-- NAV -->
     <nav class="bottom-nav">
       <button data-view="home" class="nav-item active">Hjem</button>
       <button data-view="events" class="nav-item">Events</button>
@@ -94,10 +76,8 @@
       <button data-view="messages" class="nav-item">Besked</button>
       <button data-view="profile" class="nav-item">Profil</button>
     </nav>
-
   </div>
 
   <script src="app.js"></script>
-
 </body>
 </html>
