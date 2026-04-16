@@ -106,3 +106,10 @@ h1,h2,h3{
 .nav-item.active{
   color:var(--gold);
 }
+.crest {
+  width: min(420px, 72vw);
+  max-width: 420px;
+  height: auto;
+  margin: 0 auto 26px;
+  display: block;
+}
