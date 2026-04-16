@@ -483,3 +483,9 @@ textarea {
     padding: 14px 22px;
   }
 }
+.crest {
+  width: 160px;
+  height: auto;
+  display: block;
+  margin: 40px auto 20px;
+}
