@@ -5,190 +5,99 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Circulus Aureus</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
-    rel="stylesheet"
-  />
-  <link rel="stylesheet" href="/styles.css" />
-</head>
-<body>
-  <div class="ambient"></div>
+  <link rel="stylesheet" href="styles.css" />
 
-  <div id="auth-shell" class="auth-shell">
-    <main class="auth-wrap">
-      <section class="glass hero-card">
-        <div class="logo-wrap">
-          <img class="logo" src="/assets/logo.png" alt="Circulus Aureus logo" />
-        </div>
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
 
-        <p class="eyebrow center">CIRCULUS AUREUS</p>
-        <h1 class="hero-title center">DET DIGITALE<br />LOGERUM</h1>
-        <p class="hero-text center">
-          Privat medlemsplatform til begivenheder, referater, medlemmer og interne beskeder.
-        </p>
-
-        <div class="hero-actions">
-          <button id="open-login" class="btn btn-primary" type="button">LOG IND</button>
-          <button id="open-request" class="btn btn-secondary" type="button">ANMOD OM ADGANG</button>
-        </div>
-
-        <section id="request-box" class="request-box hidden">
-          <p class="eyebrow">ANMOD OM ADGANG</p>
-          <p class="muted">
-            Denne del kobler vi på i næste step. Lige nu får vi login og design helt stabilt først.
-          </p>
-        </section>
-
-        <div class="status-card">
-          <span class="status-dot"></span>
-          <span id="identity-status">Afventer login</span>
-        </div>
-
-        <p class="muted center small-note">
-          Invite-linket fra e-mail skal senere behandles på denne side.
-        </p>
-      </section>
-    </main>
-  </div>
-
-  <div id="app-shell" class="app-shell hidden">
-    <main class="app-wrap">
-      <section id="view-dashboard" class="view active">
-        <header class="glass section-card top-card">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">PRIVAT OMRÅDE</p>
-              <h1 id="page-title" class="section-title">DASHBOARD</h1>
-            </div>
-            <div id="role-pill" class="pill">Medlem</div>
-          </div>
-        </header>
-
-        <div class="stats-stack">
-          <article class="glass section-card stat-card">
-            <div class="stat-number">0</div>
-            <div class="stat-label">Begivenheder</div>
-          </article>
-
-          <article class="glass section-card stat-card">
-            <div class="stat-number">0</div>
-            <div class="stat-label">Medlemmer</div>
-          </article>
-
-          <article class="glass section-card stat-card">
-            <div class="stat-number">0</div>
-            <div class="stat-label">Beskeder</div>
-          </article>
-        </div>
-
-        <article class="glass section-card info-card">
-          <p class="eyebrow">VELKOMMEN</p>
-          <h2 class="card-title">DET INDRE RUM ER ÅBENT</h2>
-          <p class="muted">
-            Den rene version er nu aktiv. Næste step bliver at koble data på begivenheder, medlemmer og beskeder.
-          </p>
-        </article>
-      </section>
-
-      <section id="view-events" class="view">
-        <header class="glass section-card top-card">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">PRIVAT OMRÅDE</p>
-              <h1 class="section-title">BEGIVENHEDER</h1>
-            </div>
-            <div class="pill">Medlem</div>
-          </div>
-        </header>
-
-        <article class="glass section-card">
-          <p class="eyebrow">BEGIVENHEDER</p>
-          <h2 class="card-title">KOMMENDE ARRANGEMENTER</h2>
-          <p class="muted">Vi kobler event-data på i næste version.</p>
-        </article>
-      </section>
-
-      <section id="view-members" class="view">
-        <header class="glass section-card top-card">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">PRIVAT OMRÅDE</p>
-              <h1 class="section-title">MEDLEMMER</h1>
-            </div>
-            <div class="pill">Medlem</div>
-          </div>
-        </header>
-
-        <article class="glass section-card">
-          <p class="eyebrow">MEDLEMMER</p>
-          <h2 class="card-title">LOGENS BRØDRE</h2>
-          <p class="muted">Medlemsdata kobles på i næste version.</p>
-        </article>
-      </section>
-
-      <section id="view-messages" class="view">
-        <header class="glass section-card top-card">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">PRIVAT OMRÅDE</p>
-              <h1 class="section-title">BESKEDER</h1>
-            </div>
-            <div class="pill">Medlem</div>
-          </div>
-        </header>
-
-        <article class="glass section-card">
-          <p class="eyebrow">BESKEDER</p>
-          <h2 class="card-title">INTERN KOMMUNIKATION</h2>
-          <p class="muted">Beskedsystem kobles på i næste version.</p>
-        </article>
-      </section>
-
-      <section id="view-profile" class="view">
-        <header class="glass section-card top-card">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">PRIVAT OMRÅDE</p>
-              <h1 class="section-title">PROFIL</h1>
-            </div>
-            <div class="pill">Medlem</div>
-          </div>
-        </header>
-
-        <article class="glass section-card">
-          <p class="eyebrow">DIGITALT MEDLEMSKORT</p>
-          <h2 id="profile-name" class="card-title">BRODER</h2>
-          <p id="profile-email" class="muted">ikke logget ind</p>
-
-          <div class="chip-row">
-            <div id="profile-role-chip" class="profile-chip">Medlem</div>
-          </div>
-        </article>
-
-        <article class="glass section-card">
-          <p class="eyebrow">STATUS</p>
-          <h2 class="card-title">AKTIV ADGANG</h2>
-          <p class="muted">Din adgang styres via Netlify Identity.</p>
-
-          <div class="hero-actions">
-            <button id="logout-btn" class="btn btn-secondary" type="button">LOG UD</button>
-          </div>
-        </article>
-      </section>
-    </main>
-
-    <nav class="bottom-nav">
-      <button class="nav-item active" data-view="dashboard" type="button">Hjem</button>
-      <button class="nav-item" data-view="events" type="button">Events</button>
-      <button class="nav-item" data-view="members" type="button">Medl.</button>
-      <button class="nav-item" data-view="messages" type="button">Besked</button>
-      <button class="nav-item" data-view="profile" type="button">Profil</button>
-    </nav>
-  </div>
-
+  <!-- Netlify Identity -->
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <script src="/app.js"></script>
+</head>
+
+<body>
+
+  <!-- LOGIN VIEW -->
+  <section id="view-login">
+
+    <!-- 🔥 LOGO FIXET HER -->
+    <img src="/assets/crest.jpeg" alt="Circulus Aureus logo" class="crest">
+
+    <p class="eyebrow">Circulus Aureus</p>
+    <h1>DET DIGITALE LOGERUM</h1>
+
+    <p class="muted">
+      Privat medlemsplatform til begivenheder, referater, medlemmer og interne beskeder.
+    </p>
+
+    <button id="login-btn" class="btn primary">LOG IND</button>
+    <button id="request-btn" class="btn secondary">ANMOD OM ADGANG</button>
+
+  </section>
+
+  <!-- APP -->
+  <div id="app" class="hidden">
+
+    <!-- HEADER -->
+    <header class="hero">
+      <p class="eyebrow">Privat område</p>
+      <h2>DASHBOARD</h2>
+      <span id="user-role" class="pill">Medlem</span>
+    </header>
+
+    <!-- DASHBOARD -->
+    <section id="view-home" class="view active">
+      <div class="card">0<br><span>Begivenheder</span></div>
+      <div class="card">0<br><span>Medlemmer</span></div>
+      <div class="card">0<br><span>Beskeder</span></div>
+    </section>
+
+    <!-- EVENTS -->
+    <section id="view-events" class="view">
+      <div class="card">
+        <p class="eyebrow">Begivenheder</p>
+        <h3>Kommende arrangementer</h3>
+        <p>Vi kobler event-data på i næste version.</p>
+      </div>
+    </section>
+
+    <!-- MEMBERS -->
+    <section id="view-members" class="view">
+      <div class="card">
+        <p class="eyebrow">Medlemmer</p>
+        <h3>Logens brødre</h3>
+      </div>
+    </section>
+
+    <!-- MESSAGES -->
+    <section id="view-messages" class="view">
+      <div class="card">
+        <p class="eyebrow">Beskeder</p>
+        <h3>Intern kommunikation</h3>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="view-profile" class="view">
+      <div class="card">
+        <p class="eyebrow">Digitalt medlemskort</p>
+        <h3 id="user-name">Bruger</h3>
+        <p id="user-email"></p>
+        <button id="logout-btn" class="btn secondary">LOG UD</button>
+      </div>
+    </section>
+
+    <!-- NAV -->
+    <nav class="bottom-nav">
+      <button data-view="home" class="nav-item active">Hjem</button>
+      <button data-view="events" class="nav-item">Events</button>
+      <button data-view="members" class="nav-item">Medl.</button>
+      <button data-view="messages" class="nav-item">Besked</button>
+      <button data-view="profile" class="nav-item">Profil</button>
+    </nav>
+
+  </div>
+
+  <script src="app.js"></script>
+
 </body>
 </html>
